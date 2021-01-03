@@ -1,0 +1,15 @@
+.header {
+    margin-left: 40px;
+}
+.header img {
+    float: left;
+    width: 60px;
+}
+
+.header h1 {
+    font-family: 'Bungee Outline', cursive;
+    position: relative;
+    top: 12px;
+    left: 10px;
+    color: #b62828;
+}
