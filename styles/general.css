@@ -7,9 +7,24 @@
 }
 
 .header h1 {
-    font-family: 'Bungee Outline', cursive;
     position: relative;
     top: 12px;
     left: 10px;
+}
+
+.header a, a:hover, a:focus, a:active {
+    text-decoration: none;
+}
+
+h1 {
+    font-family: 'Bungee Outline', cursive;
     color: #b62828;
+}
+
+article {
+    padding-top: 70px;
+}
+
+article h1 {
+    text-align: center;
 }
