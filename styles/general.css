@@ -23,8 +23,13 @@ h1 {
 
 article {
     padding-top: 70px;
+    width: 70%;
+    margin: 0 auto;
+    padding: 2em 0.5em 0.5em;
+    color: #666;
 }
 
-article h1 {
-    text-align: center;
+li a, a:hover, a:focus, a:active {
+    text-decoration: none;
+    color: #b62828;
 }
