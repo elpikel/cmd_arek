@@ -1,68 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="utf-8">
-    <title>cmdarek.com - Using LiveView and Genservers to track cryptocurrency exchanges</title>
+    <head>
+        <meta charset="utf-8">
+        <title>cmdarek.com - Using LiveView and Genservers to track cryptocurrency exchanges</title>
 
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <link rel="stylesheet" href="../styles/default.css">
-    <script src="../js/highlight.min.js"></script>
-    <script>
-        hljs.initHighlightingOnLoad();
-    </script>
+        <link rel="stylesheet" href="../styles/hybrid.css">
+        <script src="../js/highlight.pack.js"></script>
+        <script>
+            hljs.initHighlightingOnLoad();
+        </script>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="Description" lang="en" content="">
-    <meta name="author" content="">
-    <meta name="robots" content="index, follow">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="Description" lang="en" content="">
+        <meta name="author" content="">
+        <meta name="robots" content="index, follow">
 
-    <link rel="apple-touch-icon" href="../images/logo.svg">
-    <link rel="shortcut icon" href="../images/logo.svg">
-    <link rel="icon" href="images/logo.svg">
+        <link rel="apple-touch-icon" href="../images/logo.svg">
+        <link rel="shortcut icon" href="../images/logo.svg">
+        <link rel="icon" href="images/logo.svg">
 
-    <link rel="stylesheet" href="../styles/general.css">
-</head>
+        <link rel="stylesheet" href="../styles/general.css">
+    </head>
 
-<body>
-    <div class="container">
-        <div class="header">
-            <a href="../index.html">
-                <img src="../images/logo.svg" alt="logo" />
-                <h1>cmdarek</h1>
-            </a>
-            <div>
-                <a target="_blank" href="https://twitter.com/el_pikel" class="fa fa-twitter"></a>
-                <a target="_blank" href="https://www.linkedin.com/in/arkadiusz-plichta-97a7a04b/" class="fa fa-linkedin"></a>
+    <body>
+        <div class="container">
+            <div class="header">
+                <a href="../index.html">
+                    <img src="../images/logo.svg" alt="logo" />
+                    <h1>cmdarek</h1>
+                </a>
+                <div>
+                    <a target="_blank" href="https://twitter.com/el_pikel" class="fa fa-twitter"></a>
+                    <a target="_blank" href="https://www.linkedin.com/in/arkadiusz-plichta-97a7a04b/" class="fa fa-linkedin"></a>
+                </div>
             </div>
-        </div>
-        <!--<div class="nav-bar">
+            <!--<div class="nav-bar">
                 <ul class="nav">
                 <li><a href="#">Nav item 1</a></li>
                 </ul>
-            </div> -->
-        <div class="content">
-            <div class="main">
-                <span>01-01-2021</span>
-                <h2>Using LiveView and Genservers to track cryptocurrency exchanges</h2>
+                </div> -->
+                <div class="content">
+                    <div class="main">
+                        <span>01-01-2021</span>
+                        <h2>Using LiveView and Genservers to track cryptocurrency exchanges</h2>
 
-                <h3>Describe problem</h3>
-                <p>image of solution</p>
+                        <pre>
+                        <code class="elixir">
+defmodule Ebisu.Utils.Http do
+  @timeout 5000
+  @callback get(String.t()) :: term | no_return
 
-                <h3>Describe building blocks</h3>
-                <ul>
-                    <li>application setup</li>
-                    <li>http calls + tests</li>
-                    <li>db models + tests</li>
-                    <li>workers + tests</li>
-                    <li>live view + tests</li>
-                    <li>js hooks and chart.js</li>
-                </ul>
-            </div>
-        </div>
-</body>
+  def get(url) do
+    case HTTPoison.get(url, [{"content-type", "application/json"}], recv_timeout: @timeout) do
+      {:ok, %HTTPoison.Response{body: body, status_code: 200}} ->
+        Jason.decode!(body)
+
+      {:ok, %HTTPoison.Response{body: body}} ->
+        {:error, body}
+
+      {:error, %HTTPoison.Error{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  def new do
+    Application.get_env(:ebisu, :http_client)
+  end
+end
+                        </code>
+                        </pre>
+                        <h3>Describe problem</h3>
+                        <p>image of solution</p>
+
+                        <h3>Describe building blocks</h3>
+                        <ul>
+                            <li>application setup</li>
+                            <li>http calls + tests</li>
+                            <li>db models + tests</li>
+                            <li>workers + tests</li>
+                            <li>live view + tests</li>
+                            <li>js hooks and chart.js</li>
+                        </ul>
+                    </div>
+                </div>
+    </body>
 
 </html>
