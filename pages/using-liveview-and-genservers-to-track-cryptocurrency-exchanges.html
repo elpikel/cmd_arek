@@ -47,13 +47,23 @@
                 <div class="content">
                     <div class="main">
                         <span>01-01-2021</span>
-                        <h2>Using LiveView and Genservers to track cryptocurrency exchanges</h2>
+                        <h2>Using LiveView and GenServers to track cryptocurrency exchanges</h2>
 
+                        <p>My assumption was that price of Bitcoin varies from one cryptocurrecy exchange to another and that I could make $$$ just by buying and selling BTC on different platforms. In order to check that I could just get prices from last few days from few exchanges and use Excel to do the comparison or I could use this idea to improve my knowledge on LiveView and GenServers. As you have already guessed I picked latter option.</p>
+
+                        <p><img src="../images/ebisu.svg" class="center"/></p>
+
+                        <p>Our solution consist of two application: ebisu and ebisu_web. First one is responsible for periodically check BTC price in exchanges, saving fetched data in db and notifying ebisu_web about new pices. Ebisu_web is simple web application that shows BTC price from few exchanges in real time. To not add unnecessary complexity I'm going to describe solution only for bitbay.<p/>
+
+                        <p><img src="../images/ebisu.gif" class="center"/></p>
+
+                        <h3>Main components</h3>
+                        <p>To fetch data from exchanges we use <a href="https://github.com/edgurgel/httpoison">HTTPoison</a> which is simple yet powerfull HTTP client. Ebisu.Utils.Http is wrapper around this library. It is done that way to reuse it in multiple places and to mock it in test. Ebisu.Bitbay.Clients.Http provides us with function to get data from exchange and exchange rate provider. We use it to calculate USD to PLN price.</p>                       
                         <pre>
                         <code class="elixir">
 defmodule Ebisu.Utils.Http do
   @timeout 5000
-  @callback get(String.t()) :: term | no_return
+  @callback get(String.t()) :: term() | no_return() | {:error, term()}
 
   def get(url) do
     case HTTPoison.get(url, [{"content-type", "application/json"}], recv_timeout: @timeout) do
@@ -73,15 +83,86 @@ defmodule Ebisu.Utils.Http do
   end
 end
                         </code>
-                        </pre>
-                        <h3>Describe problem</h3>
-                        <p><img src="../images/ebisu.svg"/></p>
+                        <code class="elixir">
+defmodule Ebisu.Bitbay.Clients.Http do
+  alias Ebisu.Utils.Http
 
-                        <h3>Describe building blocks</h3>
+  # {"max":4500,"min":1465,"last":1533,"bid":1513,"ask":1542,"vwap":1524.42,"average":1545.67,"volume":4.54042857}
+  def get_ticker do
+    Http.new().get("https://bitbay.net/API/Public/BTCPLN/ticker.json")
+  end
+
+  def get_rate do
+    rate = Http.new().get("http://api.nbp.pl/api/exchangerates/rates/a/usd/?format=json")
+
+    rate
+    |> Map.get("rates")
+    |> Enum.at(0)
+    |> Map.get("mid")
+  end
+end
+                        </code> 
+                        </pre>
+
+                        <p>Heart of our application is exchange module which main responsibility is to get last price of BTC, converte it to USD and save it to db. Data is going to be stored in PostgreSQL using Ecto. For this to work we also have to define schema.</p>
+                        <pre>
+                        <code>
+defmodule Ebisu.Bitbay do
+  alias Ebisu.Bitbay.Clients.Http
+  alias Ebisu.Bitbay.Ticker
+
+  alias Ebisu.Repo
+
+  import Ecto.Query
+
+  def add_ticker do
+    rate = Http.get_rate()
+
+    Http.get_ticker()
+    |> Map.put("rate", rate)
+    |> Ticker.changeset()
+    |> Repo.insert()
+  end
+
+  def tickers(limit \\ 20) do
+    Ticker
+    |> order_by(desc: :updated_at)
+    |> limit(^limit)
+    |> Repo.all()
+  end
+end
+                        </code>
+                        <code>
+defmodule Ebisu.Bitbay.Ticker do
+  use Ecto.Schema
+
+  import Ecto.Changeset
+
+  @fields [:max, :min, :last, :bid, :ask, :vwap, :average, :volume, :rate]
+
+  schema "bitbay_tickers" do
+    field(:max, :float)
+    field(:min, :float)
+    field(:last, :float)
+    field(:bid, :float)
+    field(:ask, :float)
+    field(:vwap, :float)
+    field(:average, :float)
+    field(:volume, :float)
+    field(:rate, :float)
+
+    timestamps(type: :utc_datetime)
+  end
+
+  def changeset(params) do
+    %__MODULE__{}
+    |> cast(params, @fields)
+    |> validate_required(@fields)
+  end
+end
+                        </code></pre>
+
                         <ul>
-                            <li>application setup</li>
-                            <li>http calls + tests</li>
-                            <li>db models + tests</li>
                             <li>workers + tests</li>
                             <li>live view + tests</li>
                             <li>js hooks and chart.js</li>
