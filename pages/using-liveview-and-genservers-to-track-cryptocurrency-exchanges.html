@@ -50,16 +50,16 @@
                         <span>01-02-2021</span>
                         <h2>Using LiveView and GenServers to track cryptocurrency exchanges</h2>
 
-                        <p>My assumption was that price of Bitcoin varies from one cryptocurrecy exchange to another and that I could make $$$ just by buying and selling BTC on different platforms. In order to check that I could just get prices from last few days from few exchanges and use Excel to do the comparison or I could use this idea to improve my knowledge on LiveView and GenServers. As you have already guessed I picked latter option.</p>
+                        <p>My assumption was that price of Bitcoin varies from one cryptocurrecy exchange to another and that I could earn just by buying and selling BTC on different platforms. In order to check that I could just get prices from last few days from few exchanges and use Excel to do the comparison or I could use this idea to improve my knowledge on LiveView and GenServers. As you have already guessed I picked latter option.</p>
 
                         <p><img src="../images/ebisu.svg" class="center"/></p>
 
-                        <p>Our solution consist of two application: ebisu and ebisu_web. First one is responsible for periodically check BTC price in exchanges, saving fetched data in db and notifying ebisu_web about new pices. Ebisu_web is simple web application that shows BTC price from few exchanges in real time. To not add unnecessary complexity I'm going to describe solution only for bitbay.<p/>
+                        <p>Our solution consist of two application: ebisu and ebisu_web. First one is responsible for periodically check BTC price in exchanges, saving this data in db and notifying ebisu_web about new pices. Ebisu_web is simple web application that shows BTC price from few exchanges in real time. To not add unnecessary complexity I'm going to describe solution only for bitbay.<p/>
 
                         <p><img src="../images/ebisu.gif" class="center"/></p>
 
                         <h3>Main components</h3>
-                        <p>To fetch data from exchanges we use <a href="https://github.com/edgurgel/httpoison">HTTPoison</a> which is simple yet powerfull HTTP client. Ebisu.Utils.Http is wrapper around this library. It is done that way to reuse it in multiple places and to mock it in tests. We should move this component to separate application where we could test it with real api and in tests for ebisu app we should use mocks.</p>                       
+                        <p>To fetch data from exchanges we use <a href="https://github.com/edgurgel/httpoison">HTTPoison</a> which is simple yet powerfull HTTP client. Ebisu.Utils.Http is wrapper around this library. It is done that way to reuse it in multiple places and to mock it in tests. This component should be moved to separate application where we could test it with real api and in tests for ebisu app we should use mocks.</p>                       
                         <pre>
                         <code class="elixir">
 defmodule Ebisu.Utils.Http do
@@ -165,7 +165,7 @@ defmodule Ebisu.Bitbay.Ticker do
 end
                         </code></pre>
 
-                        <p>Last part of our ebisu application is GenServer which we use to periodically call exchange module and broadcast information to all subscribers using phoenix pub_sub. Subscriber to bitbay meassages with ticker information is LiveView which is part of ebisu_web app.</p>
+                        <p>Last part of our ebisu application is <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> which we use to periodically call exchange module and broadcast information to all subscribers using <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html">Phoenix.PubSub<a>. Subscriber to broadcasted messages is <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> which lives in ebisu_web app.</p>
                         <pre>
                         <code>
 defmodule Ebisu.Bitbay.Worker.Ticker do
