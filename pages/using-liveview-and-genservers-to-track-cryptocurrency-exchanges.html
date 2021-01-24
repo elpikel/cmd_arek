@@ -59,7 +59,7 @@
                         <p><img src="../images/ebisu.gif" class="center"/></p>
 
                         <h3>Main components</h3>
-                        <p>To fetch data from exchanges we use <a href="https://github.com/edgurgel/httpoison">HTTPoison</a> which is simple yet powerfull HTTP client. Ebisu.Utils.Http is wrapper around this library. It is done that way to reuse it in multiple places and to mock it in test. Ebisu.Bitbay.Clients.Http provides us with function to get data from exchange and exchange rate provider. We use it to calculate USD to PLN price.</p>                       
+                        <p>To fetch data from exchanges we use <a href="https://github.com/edgurgel/httpoison">HTTPoison</a> which is simple yet powerfull HTTP client. Ebisu.Utils.Http is wrapper around this library. It is done that way to reuse it in multiple places and to mock it in tests. We should move this component to separate application where we could test it with real api and in tests for ebisu app we should use mocks.</p>                       
                         <pre>
                         <code class="elixir">
 defmodule Ebisu.Utils.Http do
@@ -85,7 +85,7 @@ defmodule Ebisu.Utils.Http do
 end
                         </code>
                         </pre>
-                        <p>To simplify code we have another layer of abstraction for http client. For each exchange we have specific http client. In BitBay example we are going to fetch BTC price in PLN which we then convert to USD.</p>
+                        <p>To simplify code we have yet another layer of abstraction for http client. For each exchange we have specific http client. In BitBay example we are going to fetch BTC price in PLN which we then convert to USD.</p>
                         <pre>
                         <code class="elixir">
 defmodule Ebisu.Bitbay.Clients.Http do
@@ -107,7 +107,7 @@ end
                         </code> 
                         </pre>
 
-                        <p>In heart of our application is exchange module which main responsibility is to get last price of BTC, converte it to USD and save it to db. Data is going to be stored in PostgreSQL using Ecto. For this to work we also have to define schema.</p>
+                        <p>In heart of our application is exchange module which main responsibility is to get last price of BTC, converte it to USD and save it to db. Data is going to be stored in PostgreSQL using Ecto. For this to work we also have to define schema and migration.</p>
                         <pre>
                         <code>
 defmodule Ebisu.Bitbay do
@@ -165,7 +165,7 @@ defmodule Ebisu.Bitbay.Ticker do
 end
                         </code></pre>
 
-                        <p>Last part of our ebisu application is GenServer which we use to periodically call exchange module and broadcast information to all subscibers using phoenix pub_sub. Subscriber to bitbay meassages with ticker information is LiveView which is part of ebisu_web.</p>
+                        <p>Last part of our ebisu application is GenServer which we use to periodically call exchange module and broadcast information to all subscribers using phoenix pub_sub. Subscriber to bitbay meassages with ticker information is LiveView which is part of ebisu_web app.</p>
                         <pre>
                         <code>
 defmodule Ebisu.Bitbay.Worker.Ticker do
@@ -201,7 +201,7 @@ defmodule Ebisu.Bitbay.Worker.Ticker do
 end
                         </code>
                         </pre>
-                        <p>To test that GenServer sends message to itself, fetches data from external api and saves it to db we have to mock our http module. For that we use <a href="https://hexdocs.pm/mox/Mox.html">Mox library</a> and we specify mocked module in our setup. Next we start our worker and after 150ms we check db if we have new ticker.</p>
+                        <p>To test our GenServer we have to make it predictable. Right now when start our worker it call external api and this call can take different amount of time on each call. We use <a href="https://hexdocs.pm/mox/Mox.html">Mox library</a></p> to always return the same data and to not wait for response. Next we have start worker wait for 150ms and check if we have any tickers in db.
                         <pre><code>
 defmodule Ebisu.Bitbay.Worker.TickerTest do
   use Ebisu.DataCase
