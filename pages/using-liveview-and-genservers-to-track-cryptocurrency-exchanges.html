@@ -50,7 +50,7 @@
                         <span>01-02-2021</span>
                         <h2>Using LiveView and GenServers to track cryptocurrency exchanges</h2>
 
-                        <p>My assumption was that price of Bitcoin varies from one cryptocurrecy exchange to another and that I could earn just by buying and selling BTC on different platforms. In order to check that I could just get prices from last few days from few exchanges and use Excel to do the comparison or I could use this idea to improve my knowledge on LiveView and GenServers. As you have already guessed I picked latter option.</p>
+                        <p>My assumption was that price of Bitcoin varies from one cryptocurrecy exchange to another and that I could earn just by buying and selling BTC on different platforms. In order to check that I could just get prices from last few days from few exchanges and use Excel to do the comparison or I could use this idea to improve my knowledge on <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> and <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a>. As you have already guessed I picked latter option.</p>
 
                         <p><img src="../images/ebisu.svg" class="center"/></p>
 
@@ -201,7 +201,7 @@ defmodule Ebisu.Bitbay.Worker.Ticker do
 end
                         </code>
                         </pre>
-                        <p>To test our GenServer we have to make it predictable. Right now when start our worker it call external api and this call can take different amount of time on each call. We use <a href="https://hexdocs.pm/mox/Mox.html">Mox library</a> to always return the same data and to not wait for response. Next we have start worker wait for 150ms and check if we have any tickers in db.</p>
+                        <p>To test our <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> we have to make it predictable. Right now when start our worker it call external api and this call can take different amount of time on each call. We use <a href="https://hexdocs.pm/mox/Mox.html">Mox library</a> to always return the same data and to not wait for response. Next we have start worker wait for 150ms and check if we have any tickers in db.</p>
                         <pre><code>
 defmodule Ebisu.Bitbay.Worker.TickerTest do
   use Ebisu.DataCase
@@ -259,7 +259,7 @@ defmodule Ebisu.Bitbay.Worker.TickerTest do
   end
 end
                         </pre></code>
-                        <p>Our web application consist of LiveView page which gets tickers at initial load and then passes tickers received from GenServer to web page where it is handled by javascript hook which updates graph.</p>
+                        <p>Our web application consist of <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> page which gets tickers at initial load and then passes tickers received from <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> to web page where it is handled by javascript hook which updates graph.</p>
                         <pre><code>
 defmodule EbisuWeb.TickerLive do
   use EbisuWeb, :live_view
