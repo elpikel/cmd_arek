@@ -54,7 +54,7 @@
 
                         <p><img src="../images/ebisu.svg" class="center img-responsive"/></p>
 
-                        <p>Our solution consist of two application: ebisu and ebisu_web. First one is responsible for periodically check BTC price in exchanges, saving this data in db and notifying ebisu_web about new pices. Ebisu_web is simple web application that shows BTC price from few exchanges in real time. To not add unnecessary complexity I'm going to describe solution only for bitbay.<p/>
+                        <p>Our solution consist of two application: ebisu and ebisu_web. First one is responsible for periodically check BTC price in exchanges, saving this data in db and notifying ebisu_web about new pices. Ebisu_web is simple web application that shows BTC price from few exchanges in real time. To not add unnecessary complexity I'm going to describe solution only for <a href="https://bitbay.net">BitBay exchange</a>.<p/>
 
                         <p><img src="../images/ebisu.gif" class="center img-responsive"/></p>
 
@@ -85,7 +85,7 @@ defmodule Ebisu.Utils.Http do
 end
                         </code>
                         </pre>
-                        <p>To simplify code we have yet another layer of abstraction for http client. For each exchange we have specific http client. In BitBay example we are going to fetch BTC price in PLN which we then convert to USD.</p>
+                        <p>To simplify code we have yet another layer of abstraction for http client. For each exchange we have specific http client. In <a href="https://bitbay.net">BitBay</a> example we are going to fetch BTC price in PLN which we then convert to USD.</p>
                         <pre>
                         <code class="elixir">
 defmodule Ebisu.Bitbay.Clients.Http do
