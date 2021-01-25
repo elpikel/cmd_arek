@@ -165,7 +165,7 @@ defmodule Ebisu.Bitbay.Ticker do
 end
                         </code></pre>
 
-                        <p>Last part of our ebisu application is <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> which we use to periodically call exchange module and broadcast information to all subscribers using <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html">Phoenix.PubSub<a>. Subscriber to broadcasted messages is <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> which lives in ebisu_web app.</p>
+                        <p>Last part of our ebisu application is <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> called Ticker which we use to periodically call exchange module (which gets and saves information about BTC price) and broadcasts this information to all subscribers using <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html">Phoenix.PubSub</a>. Right now have only one subsciber which is <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> that lives in ebisu_web app.</p>
                         <pre>
                         <code>
 defmodule Ebisu.Bitbay.Worker.Ticker do
