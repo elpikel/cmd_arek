@@ -326,11 +326,13 @@ defmodule EbisuWeb.TickerLive do
   end
 end
                         </code></pre>
-                        <p>Our view consist of canvas definition where we store initial array of tickers. We also have to specify js hook using phx-hook.</p>
+                        <p>To diplay exchange information we are going to use <a href="https://www.chartjs.org">chart.js</a> library. Our view consist of canvas definition where we store initial array of tickers. </p>
                         <pre><code>
+&#x3C;script src=&#x22;https://cdn.jsdelivr.net/npm/chart.js@2.8.0&#x22;&#x3E;&#x3C;/script&#x3E;
+
 &lt;canvas id=&quot;chart&quot; phx-update=&quot;ignore&quot; phx-hook=&quot;Chart&quot; data-tickers=&quot;&lt;%= Poison.encode!(@tickers) %&gt;&quot;&gt;&lt;/canvas&gt;
                         </pre></code>
-                            <p>We define our hook in app.js file. In mounted function we specify how chart should look like. We also define handleEven which is used to update chart with new tickers.</p>
+                            <p>We define our hook in app.js file. In mounted function we specify how chart should look like. We also define handleEven which is used to update chart with new tickers. This function is called everytime we recive new data from exchange.</p>
                         <pre><code>
 let Hooks = {};
 Hooks.Chart = {

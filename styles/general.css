@@ -63,7 +63,7 @@ th, td
     border-bottom: 1px solid #ddd;
 }
 
-a:link { color: royalblue; }
+a:link { color: #b62828; }
 a:visited { color: purple; }
 a:focus { color: black; }
 a:hover { color: green; }
