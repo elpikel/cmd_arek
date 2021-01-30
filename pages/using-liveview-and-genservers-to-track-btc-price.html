@@ -201,7 +201,7 @@ defmodule Ebisu.Bitbay.Worker.Ticker do
 end
                         </code>
                         </pre>
-                        <p>To test our <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> we have to make it predictable. Right now when start our worker it call external api and this call can take different amount of time on each call. We use <a href="https://hexdocs.pm/mox/Mox.html">Mox library</a> to always return the same data and to not wait for response. Next we have start worker wait for 150ms and check if we have any tickers in db.</p>
+                        <p>To test our <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> we have to make it predictable. Right now when start our worker it call external api and this call can take different amount of time on each call. We use <a href="https://hexdocs.pm/mox/Mox.html">Mox library</a> to always return the same data and to not wait for response. Next we have to start worker wait for 150ms and check if we have any tickers in db.</p>
                         <pre><code>
 defmodule Ebisu.Bitbay.Worker.TickerTest do
   use Ebisu.DataCase
