@@ -43,11 +43,186 @@
                 <div class="content">
                     <div class="main">
                         <span>31-01-2021</span>
-                        <h2>Generate thumbnails in Elixir.</h2>
+                        <h2>Generate thumbnails in Elixir</h2>
 
                         <p>describe how to generate thumbnails</p>
+                        <ul>
+                            <li>generate new project</li>
+                            <li>add dependency - https://github.com/Xerpa/exmagick - install deps on mac</li>
+                            <li>explain scaling</li>
+                            <li>ceate scale module</li>
+                            <li>show tests</li>
+                            <li>create image module</li>
+                            <li>show tests</li>
+                        </ul>
                         <pre>
                         <code class="elixir">
+defmodule ExImage.ImageSize do
+  @enforce_keys [:width, :height]
+  defstruct [:width, :height]
+
+  @type t :: %__MODULE__{}
+
+  @spec scale(t, t) :: t
+  def scale(image_size, preferred_size) do
+    ratio_width = ratio(image_size.width, preferred_size.width)
+    ratio_height = ratio(image_size.height, preferred_size.height)
+    ratio = if ratio_width <= ratio_height, do: ratio_width, else: ratio_height
+
+    %__MODULE__{width: trunc(image_size.width * ratio), height: trunc(image_size.height * ratio)}
+  end
+
+  defp ratio(original, preferred), do: preferred / original
+end
+                        </code>
+                        </pre>
+
+                        <pre>
+                        <code class="elixir">
+defmodule ExImage.ImageSizeTest do
+  use ExUnit.Case
+
+  alias ExImage.ImageSize
+
+  describe "scale/2" do
+    test "width and height is equal" do
+      original = %ImageSize{width: 400, height: 400}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 400, height: 400} == scaled
+    end
+
+    test "height is equal and width is greater" do
+      original = %ImageSize{width: 800, height: 200}
+      preferred = %ImageSize{width: 200, height: 200}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 50} == scaled
+    end
+
+    test "height is smaller and width is greater" do
+      original = %ImageSize{width: 800, height: 200}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 400, height: 100} == scaled
+    end
+
+    test "height is greater and width is equal" do
+      original = %ImageSize{width: 400, height: 800}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 400} == scaled
+    end
+
+    test "height is greater and widht is greater" do
+      original = %ImageSize{width: 600, height: 800}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 300, height: 400} == scaled
+    end
+
+    test "height is greater and width is smaller" do
+      original = %ImageSize{width: 200, height: 800}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 100, height: 400} == scaled
+    end
+
+    test "height is equal and width is smaller" do
+      original = %ImageSize{width: 200, height: 400}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 400} == scaled
+    end
+
+    test "height is smaller and width is equal" do
+      original = %ImageSize{width: 400, height: 200}
+      preferred = %ImageSize{width: 400, height: 100}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 100} == scaled
+    end
+
+    test "height is smaller and width is smaller" do
+      original = %ImageSize{width: 400, height: 200}
+      preferred = %ImageSize{width: 200, height: 100}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 100} == scaled
+    end
+  end
+end
+                        </code>
+                        </pre>
+                        <pre>
+                        <code class="elixir">
+defmodule ExImage do
+  alias ExImage.ImageSize
+
+  require Logger
+
+  @spec thumbnail(binary(), ImageSize.t()) :: {:ok, Path.t()} | {:error, String.t()}
+  def thumbnail(image, preffered_size) do
+    with {:ok, handler} <- ExMagick.init(),
+         {:ok, loaded_image} <- ExMagick.image_load(handler, {:blob, image}),
+         {:ok, image_size} <- ExMagick.size(loaded_image),
+         thumbnail_size <- ImageSize.scale(image_size, preffered_size),
+         {:ok, thumbnail} <-
+           ExMagick.thumb(loaded_image, thumbnail_size.width, thumbnail_size.height),
+         {:ok, resized_image} <- ExMagick.image_dump(thumbnail) do
+      {:ok, resized_image}
+    else
+      {:error, message} = error ->
+        Logger.error(message)
+        error
+    end
+  catch
+    error ->
+      Logger.error(error)
+      {:error, error.message}
+  end
+end
+                        </code>
+                        </pre>
+     
+                        <pre>
+                        <code class="elixir">
+defmodule ExImageTest do
+  use ExUnit.Case
+
+  alias ExImage.ImageSize
+
+  describe "thumbnail/2" do
+    test "generates thumbnail" do
+      image = File.read!("test/fixtures/image.jpeg")
+
+      {:ok, thumbnail} = ExImage.thumbnail(image, %ImageSize{width: 400, height: 400})
+
+      assert thumbnail
+    end
+
+    test "returns error for incorrect file" do
+      {:error, message} = ExImage.thumbnail("image", %ImageSize{width: 400, height: 400})
+
+      assert message == "Unable to deduce image format"
+    end
+  end
+end
                         </code>
                         </pre>
                     </div>
