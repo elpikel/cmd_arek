@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
     <head>
         <meta charset="utf-8">
         <title>cmdarek.com - Using LiveView and Genservers to track BTC price</title>
@@ -16,8 +15,8 @@
         </script>
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="Description" lang="en" content="Using LiveView and Genservers to track cryptocurrency exchanges.">
-        <meta name="keywords" content="Elixir, Phoenix, Ecto, js, javascript, html, LiveView, BTC, Bitbay, cryptocurrency, exchange, GenServer, Mox">
+        <meta name="Description" lang="en" content="Generate thumbnails in Elixir">
+        <meta name="keywords" content="Elixir, Thumbails, Thumbnail, Thumbs, Generate">
         <meta name="author" content="Arkadiusz Plichta https://github.com/elpikel">
         <meta name="robots" content="index, follow">
 
@@ -42,19 +41,34 @@
             </div>
                 <div class="content">
                     <div class="main">
-                        <span>31-01-2021</span>
+                        <span>02-08-2021</span>
                         <h2>Generate thumbnails in Elixir</h2>
 
-                        <p>describe how to generate thumbnails</p>
+                        <p>We are going to use excelent library <a href="https://github.com/Xerpa/exmagick">exmagick</a> which is a wrapper around graphicsmagick - in order to use it we have to install dependencies. On MacOs we can use:</p>
+
+                        <pre>
+                        <code class="elixir">
+$ brew install libtool
+$ brew install graphicsmagick
+                        </code>
+                        </pre>
+
+                        <p>Our simple solution consist of two modules:</p>
                         <ul>
-                            <li>generate new project</li>
-                            <li>add dependency - https://github.com/Xerpa/exmagick - install deps on mac</li>
-                            <li>explain scaling</li>
-                            <li>ceate scale module</li>
-                            <li>show tests</li>
-                            <li>create image module</li>
-                            <li>show tests</li>
+                            <li>ExImage.ImageSize - it's main responsibility is to calculate size for scaled image</li>
+                            <li>ExImage - it's responsilbe for generating resized image</li>
                         </ul>
+
+                        <p>
+                        Main reason to split this two functionalities into separate modules is better testability.
+                        When calculating size for thumbails we have to consider few cases which I descibed visually.
+                        </p>
+
+                        <p><img src="../images/scales.svg" class="center img-responsive"/></p>
+
+                        <p>
+                        In order to calculate new sizes we have to get ratio for width and height and from those we pick width ration if it is smaller or equal to height ration otherwise we use height ratio. With calculated ration we can get new size which is old size multiplied by ratio.
+                        </p>
                         <pre>
                         <code class="elixir">
 defmodule ExImage.ImageSize do
@@ -77,6 +91,7 @@ end
                         </code>
                         </pre>
 
+                        <p>To fully test it we have to cover each case descibed visually.</p>
                         <pre>
                         <code class="elixir">
 defmodule ExImage.ImageSizeTest do
@@ -169,6 +184,8 @@ defmodule ExImage.ImageSizeTest do
 end
                         </code>
                         </pre>
+
+                        <p>Generating thumbnails is quite easy with help of <a href="https://github.com/Xerpa/exmagick">exmagick</a>. We have to load image, get it's size, calculate new size using ExImage.ImageSize.scale(image_size, preffered_size), generate new image with new size.</p>
                         <pre>
                         <code class="elixir">
 defmodule ExImage do
@@ -199,6 +216,7 @@ defmodule ExImage do
 end
                         </code>
                         </pre>
+                        <p>To check if we resized image with correct ratio we can use ExMagic again and assert size of generated thumbnail.</p>
      
                         <pre>
                         <code class="elixir">
@@ -213,7 +231,11 @@ defmodule ExImageTest do
 
       {:ok, thumbnail} = ExImage.thumbnail(image, %ImageSize{width: 400, height: 400})
 
-      assert thumbnail
+      with {:ok, handler} <- ExMagick.init(),
+           {:ok, loaded_image} <- ExMagick.image_load(handler, {:blob, thumbnail}),
+           {:ok, image_size} <- ExMagick.size(loaded_image) do
+        assert image_size == %{width: 400, height: 266}
+      end
     end
 
     test "returns error for incorrect file" do
@@ -225,6 +247,8 @@ defmodule ExImageTest do
 end
                         </code>
                         </pre>
+
+                        <p>You can view full code at: <a href="https://github.com/elpikel/ex_image">https://github.com/elpikel/ex_image</a>
                     </div>
                 </div>
     </body>
