@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>cmdarek.com - Using LiveView and Genservers to track BTC price</title>
+
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="../styles/hybrid.css">
+        <script src="../js/highlight.pack.js"></script>
+        <script>
+            hljs.initHighlightingOnLoad();
+        </script>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="Description" lang="en" content="Generate thumbnails in Elixir">
+        <meta name="keywords" content="Elixir, Thumbails, Thumbnail, Thumbs, Generate">
+        <meta name="author" content="Arkadiusz Plichta https://github.com/elpikel">
+        <meta name="robots" content="index, follow">
+
+        <link rel="apple-touch-icon" href="../images/logo.svg">
+        <link rel="shortcut icon" href="../images/logo.svg">
+        <link rel="icon" href="images/logo.svg">
+
+        <link rel="stylesheet" href="../styles/general.css">
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="header">
+                <a href="../index.html">
+                    <img src="../images/logo.svg" alt="logo" />
+                    <h1>cmdarek</h1>
+                </a>
+                <div>
+                    <a target="_blank" href="https://twitter.com/el_pikel" class="fa fa-twitter"></a>
+                    <a target="_blank" href="https://www.linkedin.com/in/arkadiusz-plichta-97a7a04b/" class="fa fa-linkedin"></a>
+                </div>
+            </div>
+                <div class="content">
+                    <div class="main">
+                        <span>02-08-2021</span>
+                        <h2>Generate thumbnails in Elixir</h2>
+
+                        <p>We are going to use excelent library <a href="https://github.com/Xerpa/exmagick">exmagick</a> which is a wrapper around graphicsmagick - in order to use it we have to install dependencies. On MacOs we can use:</p>
+
+                        <pre>
+                        <code class="elixir">
+$ brew install libtool
+$ brew install graphicsmagick
+                        </code>
+                        </pre>
+
+                        <p>Our simple solution consist of two modules:</p>
+                        <ul>
+                            <li>ExImage.ImageSize - it's main responsibility is to calculate size for scaled image</li>
+                            <li>ExImage - it's responsilbe for generating resized image</li>
+                        </ul>
+
+                        <p>
+                        Main reason to split this two functionalities into separate modules is better testability.
+                        When calculating size for thumbails we have to consider few cases which I descibed visually.
+                        </p>
+
+                        <p><img src="../images/scales.svg" class="center img-responsive"/></p>
+
+                        <p>
+                        In order to calculate new sizes we have to get ratio for width and height and from those we pick width ration if it is smaller or equal to height ration otherwise we use height ratio. With calculated ration we can get new size which is old size multiplied by ratio.
+                        </p>
+                        <pre>
+                        <code class="elixir">
+defmodule ExImage.ImageSize do
+  @enforce_keys [:width, :height]
+  defstruct [:width, :height]
+
+  @type t :: %__MODULE__{}
+
+  @spec scale(t, t) :: t
+  def scale(image_size, preferred_size) do
+    ratio_width = ratio(image_size.width, preferred_size.width)
+    ratio_height = ratio(image_size.height, preferred_size.height)
+    ratio = if ratio_width <= ratio_height, do: ratio_width, else: ratio_height
+
+    %__MODULE__{width: trunc(image_size.width * ratio), height: trunc(image_size.height * ratio)}
+  end
+
+  defp ratio(original, preferred), do: preferred / original
+end
+                        </code>
+                        </pre>
+
+                        <p>To fully test it we have to cover each case descibed visually.</p>
+                        <pre>
+                        <code class="elixir">
+defmodule ExImage.ImageSizeTest do
+  use ExUnit.Case
+
+  alias ExImage.ImageSize
+
+  describe "scale/2" do
+    test "width and height is equal" do
+      original = %ImageSize{width: 400, height: 400}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 400, height: 400} == scaled
+    end
+
+    test "height is equal and width is greater" do
+      original = %ImageSize{width: 800, height: 200}
+      preferred = %ImageSize{width: 200, height: 200}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 50} == scaled
+    end
+
+    test "height is smaller and width is greater" do
+      original = %ImageSize{width: 800, height: 200}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 400, height: 100} == scaled
+    end
+
+    test "height is greater and width is equal" do
+      original = %ImageSize{width: 400, height: 800}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 400} == scaled
+    end
+
+    test "height is greater and widht is greater" do
+      original = %ImageSize{width: 600, height: 800}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 300, height: 400} == scaled
+    end
+
+    test "height is greater and width is smaller" do
+      original = %ImageSize{width: 200, height: 800}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 100, height: 400} == scaled
+    end
+
+    test "height is equal and width is smaller" do
+      original = %ImageSize{width: 200, height: 400}
+      preferred = %ImageSize{width: 400, height: 400}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 400} == scaled
+    end
+
+    test "height is smaller and width is equal" do
+      original = %ImageSize{width: 400, height: 200}
+      preferred = %ImageSize{width: 400, height: 100}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 100} == scaled
+    end
+
+    test "height is smaller and width is smaller" do
+      original = %ImageSize{width: 400, height: 200}
+      preferred = %ImageSize{width: 200, height: 100}
+
+      scaled = ImageSize.scale(original, preferred)
+
+      assert %ImageSize{width: 200, height: 100} == scaled
+    end
+  end
+end
+                        </code>
+                        </pre>
+
+                        <p>Generating thumbnails is quite easy with help of <a href="https://github.com/Xerpa/exmagick">exmagick</a>. We have to load image, get it's size, calculate new size using ExImage.ImageSize.scale(image_size, preffered_size), generate new image with new size.</p>
+                        <pre>
+                        <code class="elixir">
+defmodule ExImage do
+  alias ExImage.ImageSize
+
+  require Logger
+
+  @spec thumbnail(binary(), ImageSize.t()) :: {:ok, Path.t()} | {:error, String.t()}
+  def thumbnail(image, preffered_size) do
+    with {:ok, handler} <- ExMagick.init(),
+         {:ok, loaded_image} <- ExMagick.image_load(handler, {:blob, image}),
+         {:ok, image_size} <- ExMagick.size(loaded_image),
+         thumbnail_size <- ImageSize.scale(image_size, preffered_size),
+         {:ok, thumbnail} <-
+           ExMagick.thumb(loaded_image, thumbnail_size.width, thumbnail_size.height),
+         {:ok, resized_image} <- ExMagick.image_dump(thumbnail) do
+      {:ok, resized_image}
+    else
+      {:error, message} = error ->
+        Logger.error(message)
+        error
+    end
+  catch
+    error ->
+      Logger.error(error)
+      {:error, error.message}
+  end
+end
+                        </code>
+                        </pre>
+                        <p>To check if we resized image with correct ratio we can use ExMagic again and assert size of generated thumbnail.</p>
+     
+                        <pre>
+                        <code class="elixir">
+defmodule ExImageTest do
+  use ExUnit.Case
+
+  alias ExImage.ImageSize
+
+  describe "thumbnail/2" do
+    test "generates thumbnail" do
+      image = File.read!("test/fixtures/image.jpeg")
+
+      {:ok, thumbnail} = ExImage.thumbnail(image, %ImageSize{width: 400, height: 400})
+
+      with {:ok, handler} <- ExMagick.init(),
+           {:ok, loaded_image} <- ExMagick.image_load(handler, {:blob, thumbnail}),
+           {:ok, image_size} <- ExMagick.size(loaded_image) do
+        assert image_size == %{width: 400, height: 266}
+      end
+    end
+
+    test "returns error for incorrect file" do
+      {:error, message} = ExImage.thumbnail("image", %ImageSize{width: 400, height: 400})
+
+      assert message == "Unable to deduce image format"
+    end
+  end
+end
+                        </code>
+                        </pre>
+
+                        <p>You can view full code at: <a href="https://github.com/elpikel/ex_image">https://github.com/elpikel/ex_image</a>
+                    </div>
+                </div>
+    </body>
+</html>
