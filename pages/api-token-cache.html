@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>cmdarek.com - Using LiveView and Genservers to track BTC price</title>
+
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="../styles/hybrid.css">
+        <script src="../js/highlight.pack.js"></script>
+        <script>
+            hljs.initHighlightingOnLoad();
+        </script>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="Description" lang="en" content="Cache API token in Elixir">
+        <meta name="keywords" content="Elixir, API, token, cache">
+        <meta name="author" content="Arkadiusz Plichta https://github.com/elpikel">
+        <meta name="robots" content="index, follow">
+
+        <link rel="apple-touch-icon" href="../images/logo.svg">
+        <link rel="shortcut icon" href="../images/logo.svg">
+        <link rel="icon" href="images/logo.svg">
+
+        <link rel="stylesheet" href="../styles/general.css">
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="header">
+                <a href="../index.html">
+                    <img src="../images/logo.svg" alt="logo" />
+                    <h1>cmdarek</h1>
+                </a>
+                <div>
+                    <a target="_blank" href="https://twitter.com/el_pikel" class="fa fa-twitter"></a>
+                    <a target="_blank" href="https://www.linkedin.com/in/arkadiusz-plichta-97a7a04b/" class="fa fa-linkedin"></a>
+                </div>
+            </div>
+            <div class="content">
+                <div class="main">
+                    <span>17-08-2021</span>
+                    <h2>Cache API token in Elixir</h2>
+
+                    <p>
+                    Probably most of the APIs that you call are protected somehow. The most common way to do that is to provide token with expiry date. We are not going to explore how to manage tokens on API side but we are going to deal with them on client side. If you want to read more about how to generate tokens please read: <a href="https://hexdocs.pm/phoenix/Phoenix.Token.html">Phoenix.Token</a>. 
+                    </p>
+
+                    <p>
+                    In our example we are going to have two endpoint:
+                    <ul>
+                        <li>/endpoint/token</li>
+                        <li>/endpoint/protected_data</li>
+                    </ul>
+                    </p>
+
+                    <p>
+                    First one is going to provide us token in following format:
+                    </p>
+
+                    <pre>
+                    <code>
+{
+    access_token: "eyJhbG", 
+    expires_in: 100
+}
+                    </code>
+                    </pre>
+
+                    <p>
+                        We are going to store this information in AccessToken structure. This module is also responsible for fetching token from API and validating it. We assume that token is valid if it expires before hour from now. 
+                    <p>
+                    <pre>
+                    <code>
+defmodule ApiClient.AccessToken do
+  @enforce_keys [:token, :expires_at]
+  defstruct token: nil, expires_at: nil
+
+  alias ApiClient.HttpClient
+
+  @token_url "token"
+
+  def get do
+    case HttpClient.get(@token_url) do
+      :error ->
+        :error
+
+      result ->
+        new(result)
+    end
+  end
+
+  def valid?(%__MODULE__{} = access_token) do
+    DateTime.compare(DateTime.add(access_token.expires_at, -60), DateTime.utc_now()) == :gt
+  end
+
+  defp new(response) do
+    token = response["access_token"]
+    expires_at = DateTime.add(DateTime.utc_now(), response["expires_in"])
+
+    %__MODULE__{token: token, expires_at: expires_at}
+  end
+end
+                    </code>
+                    </pre>
+
+                    <p>
+                    To store AccessToken we use <a href="https://hexdocs.pm/elixir/1.12/GenServer.html">GenServer</a>. Implementation is quite simple. We initiate AccessTokenCache with nil as value for cached token. On first call we just call AccessToken to get token and in succeeding calls we check if token is still valid. If yes we return it and otherwise we try to get new one and update cache.
+                    </p>
+
+                    <pre>
+                    <code>
+defmodule ApiClient.AccessTokenCache do
+  use GenServer
+
+  alias ApiClient.AccessToken
+
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, :ok, opts)
+  end
+
+  def get() do
+    GenServer.call(__MODULE__, :get)
+  end
+
+  @impl true
+  def init(:ok) do
+    {:ok, nil}
+  end
+
+  @impl true
+  def handle_call(:get, _from, nil) do
+    get_access_token()
+  end
+
+  def handle_call(:get, _from, %AccessToken{} = access_token) do
+    if AccessToken.valid?(access_token) do
+      {:reply, access_token, access_token}
+    else
+      get_access_token()
+    end
+  end
+
+  defp get_access_token() do
+    case AccessToken.get() do
+      :error ->
+        {:reply, :error, nil}
+
+      access_token ->
+        {:reply, access_token, access_token}
+    end
+  end
+end
+                    </code>
+                    </pre>
+
+                    <p>
+To get data from second endpoint we first have to call for token using AccessTokenCache. Then we have to use token in header to authorize call.
+                    </p>
+
+                    <pre>
+                    <code>
+defmodule ApiClient do
+  alias ApiClient.AccessTokenCache
+  alias ApiClient.HttpClient
+
+  def get_data do
+    access_token = AccessTokenCache.get()
+
+    HttpClient.get("protected_data", access_token.token)
+  end
+end
+                    </code>
+                    </pre>
+
+                    <p>
+                    To test this functionality we are going to use <a href="https://hexdocs.pm/bypass/Bypass.html">Bypass</a>, which is excellent tool to create a custom plug that can be put in place instead of an actual HTTP server to return prebaked responses to client requests.
+                    </p>
+
+                    <pre>
+                    <code>
+defmodule ApiClientTest do
+  use ExUnit.Case
+
+  alias ApiClient.AccessTokenCache
+
+  @access_token "{\"access_token\":\"eyJhbG\", \"expires_in\":100}"
+  @protected_data "{\"data\": \"secret\"}"
+
+  setup do
+    bypass = Bypass.open(port: 50_123)
+
+    {:ok, _pid} = start_supervised({AccessTokenCache, [name: AccessTokenCache]})
+
+    {:ok, bypass: bypass}
+  end
+
+  test "get_data", %{bypass: bypass} do
+    Bypass.expect(bypass, "GET", "/token", fn conn ->
+      Plug.Conn.resp(conn, 200, @access_token)
+    end)
+
+    Bypass.expect(bypass, "GET", "/protected_data", fn conn ->
+      assert Enum.member?(conn.req_headers, {"authorization", "Bearer eyJhbG"}) == true
+
+      Plug.Conn.resp(conn, 200, @protected_data)
+    end)
+
+    assert %{"data" => "secret"} == ApiClient.get_data()
+  end
+end
+                    </code>
+                    </pre>
+
+                    <p>You can view full code at: <a href="https://github.com/elpikel/api_client">https://github.com/elpikel/api_client</a>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
