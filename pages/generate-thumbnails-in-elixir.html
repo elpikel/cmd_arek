@@ -39,37 +39,37 @@
                     <a target="_blank" href="https://www.linkedin.com/in/arkadiusz-plichta-97a7a04b/" class="fa fa-linkedin"></a>
                 </div>
             </div>
-                <div class="content">
-                    <div class="main">
-                        <span>02-08-2021</span>
-                        <h2>Generate thumbnails in Elixir</h2>
+            <div class="content">
+                <div class="main">
+                    <span>02-08-2021</span>
+                    <h2>Generate thumbnails in Elixir</h2>
 
-                        <p>We are going to use excelent library <a href="https://github.com/Xerpa/exmagick">exmagick</a> which is a wrapper around graphicsmagick - in order to use it we have to install dependencies. On MacOs we can use:</p>
+                    <p>We are going to use excelent library <a href="https://github.com/Xerpa/exmagick">exmagick</a> which is a wrapper around graphicsmagick - in order to use it we have to install dependencies. On MacOs we can use:</p>
 
-                        <pre>
+                    <pre>
                         <code class="elixir">
 $ brew install libtool
 $ brew install graphicsmagick
                         </code>
-                        </pre>
+                    </pre>
 
-                        <p>Our simple solution consist of two modules:</p>
-                        <ul>
-                            <li>ExImage.ImageSize - it's main responsibility is to calculate size for scaled image</li>
-                            <li>ExImage - it's responsilbe for generating resized image</li>
-                        </ul>
+                    <p>Our simple solution consist of two modules:</p>
+                    <ul>
+                        <li>ExImage.ImageSize - it's main responsibility is to calculate size for scaled image</li>
+                        <li>ExImage - it's responsilbe for generating resized image</li>
+                    </ul>
 
-                        <p>
-                        Main reason to split this two functionalities into separate modules is better testability.
-                        When calculating size for thumbnails we have to consider few cases which is described visually. Green is image that we want to scale and rectangle with blue border is thumbnail we want to generate.
-                        </p>
+                    <p>
+                    Main reason to split this two functionalities into separate modules is better testability.
+                    When calculating size for thumbnails we have to consider few cases which is described visually. Green is image that we want to scale and rectangle with blue border is thumbnail we want to generate.
+                    </p>
 
-                        <p><img src="../images/scales.svg" class="center img-responsive"/></p>
+                    <p><img src="../images/scales.svg" class="center img-responsive"/></p>
 
-                        <p>
-                        In order to calculate new sizes we have to get ratio for width and height and from those we pick width ration if it is smaller or equal to height ration otherwise we use height ratio. With calculated ration we can get new size which is old size multiplied by ratio.
-                        </p>
-                        <pre>
+                    <p>
+                    In order to calculate new sizes we have to get ratio for width and height and from those we pick width ration if it is smaller or equal to height ration otherwise we use height ratio. With calculated ration we can get new size which is old size multiplied by ratio.
+                    </p>
+                    <pre>
                         <code class="elixir">
 defmodule ExImage.ImageSize do
   @enforce_keys [:width, :height]
@@ -89,10 +89,10 @@ defmodule ExImage.ImageSize do
   defp ratio(original, preferred), do: preferred / original
 end
                         </code>
-                        </pre>
+                    </pre>
 
-                        <p>To fully test it we have to cover each case descibed visually.</p>
-                        <pre>
+                    <p>To fully test it we have to cover each case descibed visually.</p>
+                    <pre>
                         <code class="elixir">
 defmodule ExImage.ImageSizeTest do
   use ExUnit.Case
@@ -183,10 +183,10 @@ defmodule ExImage.ImageSizeTest do
   end
 end
                         </code>
-                        </pre>
+                    </pre>
 
-                        <p>Generating thumbnails is quite easy with help of <a href="https://github.com/Xerpa/exmagick">exmagick</a>. We have to load image, get it's size, calculate new size using ExImage.ImageSize.scale(image_size, preffered_size), generate new image with new size.</p>
-                        <pre>
+                    <p>Generating thumbnails is quite easy with help of <a href="https://github.com/Xerpa/exmagick">exmagick</a>. We have to load image, get it's size, calculate new size using ExImage.ImageSize.scale(image_size, preffered_size), generate new image with new size.</p>
+                    <pre>
                         <code class="elixir">
 defmodule ExImage do
   alias ExImage.ImageSize
@@ -215,10 +215,10 @@ defmodule ExImage do
   end
 end
                         </code>
-                        </pre>
-                        <p>To check if we resized image with correct ratio we can use ExMagic again and assert size of generated thumbnail.</p>
-     
-                        <pre>
+                    </pre>
+                    <p>To check if we resized image with correct ratio we can use ExMagic again and assert size of generated thumbnail.</p>
+
+                    <pre>
                         <code class="elixir">
 defmodule ExImageTest do
   use ExUnit.Case
@@ -246,10 +246,11 @@ defmodule ExImageTest do
   end
 end
                         </code>
-                        </pre>
+                    </pre>
 
-                        <p>You can view full code at: <a href="https://github.com/elpikel/ex_image">https://github.com/elpikel/ex_image</a>
-                    </div>
+                    <p>You can view full code at: <a href="https://github.com/elpikel/ex_image">https://github.com/elpikel/ex_image</a>
                 </div>
+            </div>
+        </div>
     </body>
 </html>
