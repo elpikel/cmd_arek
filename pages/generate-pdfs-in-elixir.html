@@ -44,6 +44,21 @@
                     <span>02-09-2021</span>
                     <h2>Generate PDFs in Elixir</h2>
 
+                    <p>
+                    When you serch for pdf generator for elixir you most likely are going to find solution that is based on <a href="https://wkhtmltopdf.org/index.html">wkhtmltopdf</a> which is not the best idea. There is great blog post on why using this library is considered <a href="https://blog.rebased.pl/2018/07/12/wkhtmltopdf-considered-harmful.html">harmful</a>. Following advice from it we are going to use <a href="https://weasyprint.org">weasyprint</a> which is BSD-licensed Python library that is almost as good as the commercial ones.
+                    </p>
+
+                    <p>
+                    We have few possible ways to integrate with python library: 
+
+                    <ul>
+                        <li>Make a system call</li>
+                        <li>Expose python library as separate service and communicate with it using http</li>
+                        <li>Use erlang ports</li>
+                    </ul>
+
+                    We are going to explore how we can use erlang ports to communicate with python library.
+                    </p>
                     <ul>
                         <li>define problem</li>
                         <li>explain solution using python library</li>
