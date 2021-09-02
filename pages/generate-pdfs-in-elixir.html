@@ -45,28 +45,150 @@
                     <h2>Generate PDFs in Elixir</h2>
 
                     <p>
-                    When you serch for pdf generator for elixir you most likely are going to find solution that is based on <a href="https://wkhtmltopdf.org/index.html">wkhtmltopdf</a> which is not the best idea. There is great blog post on why using this library is considered <a href="https://blog.rebased.pl/2018/07/12/wkhtmltopdf-considered-harmful.html">harmful</a>. Following advice from it we are going to use <a href="https://weasyprint.org">weasyprint</a> which is BSD-licensed Python library that is almost as good as the commercial ones.
+                    When you serch for pdf generator for Elixir you most likely are going to find solution that is based on <a href="https://wkhtmltopdf.org/index.html">wkhtmltopdf</a> which is not the best idea. There is great blog post on why using this library is considered <a href="https://blog.rebased.pl/2018/07/12/wkhtmltopdf-considered-harmful.html">harmful</a>. Following advice from it we are going to use <a href="https://weasyprint.org">weasyprint</a> which is BSD-licensed Python library that is almost as good as the commercial ones.
                     </p>
 
                     <p>
                     We have few possible ways to integrate with python library: 
+                    </p>
 
                     <ul>
                         <li>Make a system call</li>
                         <li>Expose python library as separate service and communicate with it using http</li>
-                        <li>Use erlang ports</li>
+                        <li>Use Erlang ports</li>
                     </ul>
 
-                    We are going to explore how we can use erlang ports to communicate with python library.
+                    <p>
+                    We are going to use <a href="http://erlport.org">ErlPort</a> which is a library for Erlang which helps connect Erlang to a number of other programming languages. Currently supported external languages are Python and Ruby. The library uses Erlang port protocol to simplify connection between languages and Erlang external term format to set the common data types mapping. If you want to read more about ports please check <a href="https://www.theerlangelist.com/article/outside_elixir">Outside Elixir: running external programs with ports</a>
                     </p>
-                    <ul>
-                        <li>define problem</li>
-                        <li>explain solution using python library</li>
-                        <li>describe ports</li>
-                        <li>explain html generator</li>
-                        <li>show how to make concurrent calls</li>
-                    </ul>
 
+                    <p>
+                        As preliminary step we have to fetch data and populate html template with it. In our example we are going to use stub data. The easiest way to generate html is to use <a href="https://hexdocs.pm/eex/1.12/EEx.html">EEx</a> which allows you to embed Elixir code inside a string.
+                    </p>
+                    <pre>
+                    <code>
+defmodule ExPdf do
+  alias ExPdf.PythonWorker
+
+  def generate do
+    get_data()
+    |> populate_html()
+    |> generate_pdf()
+  end
+
+  defp get_data do
+    %{
+      customer: %{address: "2382 Feathers Hooves Drive", full_name: "Corey G Miller"},
+      order_items: [
+        %{name: "bought item 1", quantity: "22", price: "10000.00"},
+        %{name: "bought item 2", quantity: "2", price: "400.00"},
+        %{name: "bought item 3", quantity: "2200", price: "500.99"},
+        %{name: "bought item 4", quantity: "10", price: "500.55"},
+        %{name: "bought item 5", quantity: "1", price: "700.10"},
+        %{name: "bought item 6", quantity: "1", price: "10.20"}
+      ]
+    }
+  end
+
+  defp populate_html(%{customer: customer, order_items: order_items}) do
+    EEx.eval_file(
+      Path.join([:code.priv_dir(:ex_pdf), "templates", "invoice.html"]),
+      customer: customer,
+      order_items: order_items
+    )
+  end
+
+  defp generate_pdf(html) do
+    PythonWorker.generate(html)
+  end
+end
+                    </code>
+                    </pre>
+
+                    <p>
+                    In order to generate pdf we need to install <a href="https://doc.courtbouillon.org/weasyprint/latest/first_steps.html">weasyprint</a>. Next we are going to create single GenServer that is going to work as a proxy between our application and python port.
+                    </p>
+
+                    <pre>
+                    <code>
+defmodule ExPdf.PythonWorker do
+  use GenServer
+
+  alias ExPdf.PythonPort
+
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  def init(_) do
+    path = Path.join([:code.priv_dir(:ex_pdf), "python"])
+    pid = PythonPort.python_instance(to_charlist(path))
+
+    {:ok, %{python_pid: pid}}
+  end
+
+  def terminate(_reason, %{python_pid: pid}) do
+    :python.stop(pid)
+  end
+
+  def generate(html) do
+    GenServer.call(__MODULE__, %{html: html})
+  end
+
+  def handle_call(%{html: html}, _from, %{python_pid: pid} = state) do
+    PythonPort.call_python(pid, :pdf, :generate, [html])
+
+    {:reply, :ok, state}
+  end
+end
+                    </code>
+                    </pre>
+
+                    <p>
+                    For our python port to work we need to have python installed and we have to specify where we store our python code.
+                    </p>
+
+                    <pre>
+                    <code>
+defmodule ExPdf.PythonPort do
+  @doc """
+  ## Parameters
+    - path: directory to include in python path (charlist)
+  """
+  def python_instance(path) when is_list(path) do
+    python = '/usr/bin/python3'
+
+    {:ok, pid} = :python.start(python: python, python_path: path)
+
+    pid
+  end
+
+  @doc """
+  Call python function using MFA format
+  """
+  def call_python(pid, module, function, arguments \\ []) do
+    :python.call(pid, module, function, arguments)
+  end
+end
+                    </code>
+                    </pre>
+
+                    <p>
+                    Last piece is python code that is responsible for generating pdf based on html.
+                    </p>
+
+                    <pre>
+                    <code>
+from weasyprint import HTML
+
+def generate(html):
+    return HTML(string=html.decode('utf-8')).write_pdf()
+                    </code>
+                    </pre>
+
+                    <p>
+
+                    </p>
                 </div>
             </div>
         </div>
