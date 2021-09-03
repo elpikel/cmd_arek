@@ -49,7 +49,7 @@
                     </p>
 
                     <p>
-                    We have few possible ways to integrate with python library: 
+                    There are few possible ways to integrate with python library: 
                     </p>
 
                     <ul>
@@ -81,11 +81,7 @@ defmodule ExPdf do
       customer: %{address: "2382 Feathers Hooves Drive", full_name: "Corey G Miller"},
       order_items: [
         %{name: "bought item 1", quantity: "22", price: "10000.00"},
-        %{name: "bought item 2", quantity: "2", price: "400.00"},
-        %{name: "bought item 3", quantity: "2200", price: "500.99"},
-        %{name: "bought item 4", quantity: "10", price: "500.55"},
-        %{name: "bought item 5", quantity: "1", price: "700.10"},
-        %{name: "bought item 6", quantity: "1", price: "10.20"}
+        %{name: "bought item 2", quantity: "2", price: "400.00"}
       ]
     }
   end
@@ -106,7 +102,7 @@ end
                     </pre>
 
                     <p>
-                    In order to generate pdf we need to install <a href="https://doc.courtbouillon.org/weasyprint/latest/first_steps.html">weasyprint</a>. Next we are going to create single GenServer that is going to work as a proxy between our application and python port.
+                    Next we are going to create single GenServer that is going to work as a proxy between our application and python port.
                     </p>
 
                     <pre>
@@ -174,7 +170,7 @@ end
                     </pre>
 
                     <p>
-                    Last piece is python code that is responsible for generating pdf based on html.
+                    Last piece is python code that is responsible for generating pdf based on html. To have this code working we need to install <a href="https://doc.courtbouillon.org/weasyprint/latest/first_steps.html">weasyprint</a>.
                     </p>
 
                     <pre>
