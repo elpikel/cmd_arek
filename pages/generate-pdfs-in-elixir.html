@@ -1,71 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>cmdarek.com - Using LiveView and Genservers to track BTC price</title>
+  <head>
+    <meta charset="utf-8" />
+    <title>
+      cmdarek.com - Using LiveView and Genservers to track BTC price
+    </title>
 
-        <link rel="preconnect" href="https://fonts.gstatic.com">
-        <link href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
 
-        <link rel="stylesheet" href="../styles/hybrid.css">
-        <script src="../js/highlight.pack.js"></script>
-        <script>
-            hljs.initHighlightingOnLoad();
-        </script>
+    <link rel="stylesheet" href="../styles/hybrid.css" />
+    <script src="../js/highlight.pack.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
 
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="Description" lang="en" content="Generate PDFs in Elixir">
-        <meta name="keywords" content="Elixir, PDF, Generate">
-        <meta name="author" content="Arkadiusz Plichta https://github.com/elpikel">
-        <meta name="robots" content="index, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="Description" lang="en" content="Generate PDFs in Elixir" />
+    <meta name="keywords" content="Elixir, PDF, Generate" />
+    <meta
+      name="author"
+      content="Arkadiusz Plichta https://github.com/elpikel"
+    />
+    <meta name="robots" content="index, follow" />
 
-        <link rel="apple-touch-icon" href="../images/logo.svg">
-        <link rel="shortcut icon" href="../images/logo.svg">
-        <link rel="icon" href="images/logo.svg">
+    <link rel="apple-touch-icon" href="../images/logo.svg" />
+    <link rel="shortcut icon" href="../images/logo.svg" />
+    <link rel="icon" href="images/logo.svg" />
 
-        <link rel="stylesheet" href="../styles/general.css">
-    </head>
+    <link rel="stylesheet" href="../styles/general.css" />
+  </head>
 
-    <body>
-        <div class="container">
-            <div class="header">
-                <a href="../index.html">
-                    <img src="../images/logo.svg" alt="logo" />
-                    <h1>cmdarek</h1>
-                </a>
-                <div>
-                    <a target="_blank" href="https://twitter.com/el_pikel" class="fa fa-twitter"></a>
-                    <a target="_blank" href="https://www.linkedin.com/in/arkadiusz-plichta-97a7a04b/" class="fa fa-linkedin"></a>
-                </div>
-            </div>
-            <div class="content">
-                <div class="main">
-                    <span>06-09-2021</span>
-                    <h2>Generate PDFs in Elixir</h2>
+  <body>
+    <div class="container">
+      <div class="header">
+        <a href="../index.html">
+          <img src="../images/logo.svg" alt="logo" />
+          <h1>cmdarek</h1>
+        </a>
+        <div>
+          <a
+            target="_blank"
+            href="https://twitter.com/el_pikel"
+            class="fa fa-twitter"
+          ></a>
+          <a
+            target="_blank"
+            href="https://www.linkedin.com/in/arkadiusz-plichta-97a7a04b/"
+            class="fa fa-linkedin"
+          ></a>
+        </div>
+      </div>
+      <div class="content">
+        <div class="main">
+          <span>06-09-2021</span>
+          <h2>Generate PDFs in Elixir</h2>
 
-                    <p>
-                    When you serch for pdf generator for Elixir you most likely are going to find solution that is based on <a href="https://wkhtmltopdf.org/index.html">wkhtmltopdf</a>. There is great blog post on why using this library is considered <a href="https://blog.rebased.pl/2018/07/12/wkhtmltopdf-considered-harmful.html">harmful</a>. Following advice from it we are going to use <a href="https://weasyprint.org">weasyprint</a> which is BSD-licensed Python library that is almost as good as the commercial ones.
-                    </p>
+          <p>
+            When you serch for pdf generator for Elixir you most likely are
+            going to find solution that is based on
+            <a href="https://wkhtmltopdf.org/index.html">wkhtmltopdf</a>. There
+            is great blog post on why using this library is considered
+            <a
+              href="https://blog.rebased.pl/2018/07/12/wkhtmltopdf-considered-harmful.html"
+              >harmful</a
+            >. Following advice from it we are going to use
+            <a href="https://weasyprint.org">weasyprint</a> which is
+            BSD-licensed Python library that is almost as good as the commercial
+            ones.
+          </p>
 
-                    <p>
-                    There are few possible ways to integrate with python library: 
-                    </p>
+          <p>There are few possible ways to integrate with python library:</p>
 
-                    <ul>
-                        <li>Make a system call</li>
-                        <li>Expose python library as separate service and communicate with it using http</li>
-                        <li>Use Erlang ports</li>
-                    </ul>
+          <ul>
+            <li>Make a system call</li>
+            <li>
+              Expose python library as separate service and communicate with it
+              using http
+            </li>
+            <li>Use Erlang ports</li>
+          </ul>
 
-                    <p>
-                    We are going to use <a href="http://erlport.org">ErlPort</a> which is a library that helps connect Elixir to a number of other programming languages. Currently supported external languages are Python and Ruby. The library uses Erlang port protocol to simplify connection between languages and Erlang external term format to set the common data types mapping. If you want to read more about ports please check <a href="https://www.theerlangelist.com/article/outside_elixir">Outside Elixir: running external programs with ports</a>.
-                    </p>
+          <p>
+            We are going to use <a href="http://erlport.org">ErlPort</a> which
+            is a library that helps connect Elixir to a number of other
+            programming languages. Currently supported external languages are
+            Python and Ruby. The library uses Erlang port protocol to simplify
+            connection between languages and Erlang external term format to set
+            the common data types mapping. If you want to read more about ports
+            please check
+            <a href="https://www.theerlangelist.com/article/outside_elixir"
+              >Outside Elixir: running external programs with ports</a
+            >.
+          </p>
 
-                    <p>
-                        As preliminary step we have to fetch data and populate html template with it. In our example we are going to use stub data. The easiest way to generate html is to use <a href="https://hexdocs.pm/eex/1.12/EEx.html">EEx</a> which allows you to embed Elixir code inside a string.
-                    </p>
-                    <pre>
+          <p>
+            As preliminary step we have to fetch data and populate html template
+            with it. In our example we are going to use stub data. The easiest
+            way to generate html is to use
+            <a href="https://hexdocs.pm/eex/1.12/EEx.html">EEx</a> which allows
+            you to embed Elixir code inside a string.
+          </p>
+          <pre>
                     <code>
 defmodule ExPdf do
   alias ExPdf.PythonWorker
@@ -101,11 +144,12 @@ end
                     </code>
                     </pre>
 
-                    <p>
-                    Next we are going to create single GenServer that is going to work as a proxy between our application and python port.
-                    </p>
+          <p>
+            Next we are going to create single GenServer that is going to work
+            as a proxy between our application and python port.
+          </p>
 
-                    <pre>
+          <pre>
                     <code>
 defmodule ExPdf.PythonWorker do
   use GenServer
@@ -140,11 +184,12 @@ end
                     </code>
                     </pre>
 
-                    <p>
-                    For our python port to work we need to have python installed and we have to specify where we store our python code.
-                    </p>
+          <p>
+            For our python port to work we need to have python installed and we
+            have to specify where we store our python code.
+          </p>
 
-                    <pre>
+          <pre>
                     <code>
 defmodule ExPdf.PythonPort do
   @doc """
@@ -169,11 +214,16 @@ end
                     </code>
                     </pre>
 
-                    <p>
-                    Last piece is python code that is responsible for generating pdf based on html. To have this code working we need to install <a href="https://doc.courtbouillon.org/weasyprint/latest/first_steps.html">weasyprint</a>.
-                    </p>
+          <p>
+            Last piece is python code that is responsible for generating pdf
+            based on html. To have this code working we need to install
+            <a
+              href="https://doc.courtbouillon.org/weasyprint/latest/first_steps.html"
+              >weasyprint</a
+            >.
+          </p>
 
-                    <pre>
+          <pre>
                     <code>
 from weasyprint import HTML
 
@@ -182,9 +232,14 @@ def generate(html):
                     </code>
                     </pre>
 
-                    <p>You can view full code at: <a href="https://github.com/elpikel/ex_pdf">https://github.com/elpikel/ex_pdf</a>
-                </div>
-            </div>
+          <p>
+            You can view full code at:
+            <a href="https://github.com/elpikel/ex_pdf"
+              >https://github.com/elpikel/ex_pdf</a
+            >
+          </p>
         </div>
-    </body>
+      </div>
+    </div>
+  </body>
 </html>

@@ -1,60 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>cmdarek.com - Using LiveView and Genservers to track BTC price</title>
+  <head>
+    <meta charset="utf-8" />
+    <title>
+      cmdarek.com - Using LiveView and Genservers to track BTC price
+    </title>
 
-        <link rel="preconnect" href="https://fonts.gstatic.com">
-        <link href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
 
-        <link rel="stylesheet" href="../styles/hybrid.css">
-        <script src="../js/highlight.pack.js"></script>
-        <script>
-            hljs.initHighlightingOnLoad();
-        </script>
+    <link rel="stylesheet" href="../styles/hybrid.css" />
+    <script src="../js/highlight.pack.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
 
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="Description" lang="en" content="Using LiveView and Genservers to track cryptocurrency exchanges.">
-        <meta name="keywords" content="Elixir, Phoenix, Ecto, js, javascript, html, LiveView, BTC, Bitbay, cryptocurrency, exchange, GenServer, Mox">
-        <meta name="author" content="Arkadiusz Plichta https://github.com/elpikel">
-        <meta name="robots" content="index, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="Description"
+      lang="en"
+      content="Using LiveView and Genservers to track cryptocurrency exchanges."
+    />
+    <meta
+      name="keywords"
+      content="Elixir, Phoenix, Ecto, js, javascript, html, LiveView, BTC, Bitbay, cryptocurrency, exchange, GenServer, Mox"
+    />
+    <meta
+      name="author"
+      content="Arkadiusz Plichta https://github.com/elpikel"
+    />
+    <meta name="robots" content="index, follow" />
 
-        <link rel="apple-touch-icon" href="../images/logo.svg">
-        <link rel="shortcut icon" href="../images/logo.svg">
-        <link rel="icon" href="images/logo.svg">
+    <link rel="apple-touch-icon" href="../images/logo.svg" />
+    <link rel="shortcut icon" href="../images/logo.svg" />
+    <link rel="icon" href="images/logo.svg" />
 
-        <link rel="stylesheet" href="../styles/general.css">
-    </head>
+    <link rel="stylesheet" href="../styles/general.css" />
+  </head>
 
-    <body>
-        <div class="container">
-            <div class="header">
-                <a href="../index.html">
-                    <img src="../images/logo.svg" alt="logo" />
-                    <h1>cmdarek</h1>
-                </a>
-                <div>
-                    <a target="_blank" href="https://twitter.com/el_pikel" class="fa fa-twitter"></a>
-                    <a target="_blank" href="https://www.linkedin.com/in/arkadiusz-plichta-97a7a04b/" class="fa fa-linkedin"></a>
-                </div>
-            </div>
-            <div class="content">
-                <div class="main">
-                    <span>31-01-2021</span>
-                    <h2>Using LiveView and GenServers to track BTC price</h2>
+  <body>
+    <div class="container">
+      <div class="header">
+        <a href="../index.html">
+          <img src="../images/logo.svg" alt="logo" />
+          <h1>cmdarek</h1>
+        </a>
+        <div>
+          <a
+            target="_blank"
+            href="https://twitter.com/el_pikel"
+            class="fa fa-twitter"
+          ></a>
+          <a
+            target="_blank"
+            href="https://www.linkedin.com/in/arkadiusz-plichta-97a7a04b/"
+            class="fa fa-linkedin"
+          ></a>
+        </div>
+      </div>
+      <div class="content">
+        <div class="main">
+          <span>31-01-2021</span>
+          <h2>Using LiveView and GenServers to track BTC price</h2>
 
-                    <p>My assumption was that price of Bitcoin varies from one cryptocurrecy exchange to another and that I could earn just by buying and selling BTC on different platforms. In order to check that I could just get prices from last few days from few exchanges and use Excel to do the comparison or I could use this idea to improve my knowledge on <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> and <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a>. As you have already guessed I picked latter option.</p>
+          <p>
+            My assumption was that price of Bitcoin varies from one
+            cryptocurrecy exchange to another and that I could earn just by
+            buying and selling BTC on different platforms. In order to check
+            that I could just get prices from last few days from few exchanges
+            and use Excel to do the comparison or I could use this idea to
+            improve my knowledge on
+            <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html"
+              >LiveView</a
+            >
+            and
+            <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a>. As
+            you have already guessed I picked latter option.
+          </p>
 
-                    <p><img src="../images/ebisu.svg" class="center img-responsive"/></p>
+          <p><img src="../images/ebisu.svg" class="center img-responsive" /></p>
 
-                    <p>Our solution consist of two application: ebisu and ebisu_web. First one is responsible for periodically check BTC price in exchanges, saving this data in db and notifying ebisu_web about new pices. Ebisu_web is simple web application that shows BTC price from few exchanges in real time. To not add unnecessary complexity I'm going to describe solution only for <a href="https://bitbay.net">BitBay exchange</a>.<p/>
+          <p>
+            Our solution consist of two application: ebisu and ebisu_web. First
+            one is responsible for periodically check BTC price in exchanges,
+            saving this data in db and notifying ebisu_web about new pices.
+            Ebisu_web is simple web application that shows BTC price from few
+            exchanges in real time. To not add unnecessary complexity I'm going
+            to describe solution only for
+            <a href="https://bitbay.net">BitBay exchange</a>.
+          </p>
+          <p />
 
-                    <p><img src="../images/ebisu.gif" class="center img-responsive"/></p>
+          <p><img src="../images/ebisu.gif" class="center img-responsive" /></p>
 
-                    <h3>Main components</h3>
-                    <p>To fetch data from exchanges we use <a href="https://github.com/edgurgel/httpoison">HTTPoison</a> which is simple yet powerfull HTTP client. Ebisu.Utils.Http is wrapper around this library. It is done that way to reuse it in multiple places and to mock it in tests. This component should be moved to separate application where we could test it with real api and in tests for ebisu app we should use mocks.</p>                       
-                    <pre>
+          <h3>Main components</h3>
+          <p>
+            To fetch data from exchanges we use
+            <a href="https://github.com/edgurgel/httpoison">HTTPoison</a> which
+            is simple yet powerfull HTTP client. Ebisu.Utils.Http is wrapper
+            around this library. It is done that way to reuse it in multiple
+            places and to mock it in tests. This component should be moved to
+            separate application where we could test it with real api and in
+            tests for ebisu app we should use mocks.
+          </p>
+          <pre>
                         <code class="elixir">
 defmodule Ebisu.Utils.Http do
   @timeout 5000
@@ -79,8 +135,13 @@ defmodule Ebisu.Utils.Http do
 end
                         </code>
                     </pre>
-                    <p>To simplify code we have yet another layer of abstraction for http client. For each exchange we have specific http client. In <a href="https://bitbay.net">BitBay</a> example we are going to fetch BTC price in PLN which we then convert to USD.</p>
-                    <pre>
+          <p>
+            To simplify code we have yet another layer of abstraction for http
+            client. For each exchange we have specific http client. In
+            <a href="https://bitbay.net">BitBay</a> example we are going to
+            fetch BTC price in PLN which we then convert to USD.
+          </p>
+          <pre>
                         <code class="elixir">
 defmodule Ebisu.Bitbay.Clients.Http do
   alias Ebisu.Utils.Http
@@ -101,8 +162,13 @@ end
                         </code> 
                     </pre>
 
-                    <p>In heart of our application is exchange module which main responsibility is to get last price of BTC, converte it to USD and save it to db. Data is going to be stored in PostgreSQL using Ecto. For this to work we also have to define schema and migration.</p>
-                    <pre>
+          <p>
+            In heart of our application is exchange module which main
+            responsibility is to get last price of BTC, converte it to USD and
+            save it to db. Data is going to be stored in PostgreSQL using Ecto.
+            For this to work we also have to define schema and migration.
+          </p>
+          <pre>
                         <code>
 defmodule Ebisu.Bitbay do
   alias Ebisu.Bitbay.Clients.Http
@@ -160,8 +226,21 @@ end
                     </code>
                     </pre>
 
-                    <p>Last part of our ebisu application is <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> called Ticker which we use to periodically call exchange module (which gets and saves information about BTC price) and broadcasts this information to all subscribers using <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html">Phoenix.PubSub</a>. Right now have only one subsciber which is <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> that lives in ebisu_web app.</p>
-                    <pre>
+          <p>
+            Last part of our ebisu application is
+            <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a>
+            called Ticker which we use to periodically call exchange module
+            (which gets and saves information about BTC price) and broadcasts
+            this information to all subscribers using
+            <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html"
+              >Phoenix.PubSub</a
+            >. Right now have only one subsciber which is
+            <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html"
+              >LiveView</a
+            >
+            that lives in ebisu_web app.
+          </p>
+          <pre>
                         <code>
 defmodule Ebisu.Bitbay.Worker.Ticker do
   use GenServer
@@ -196,8 +275,17 @@ defmodule Ebisu.Bitbay.Worker.Ticker do
 end
                         </code>
                     </pre>
-                    <p>To test our <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> we have to make it predictable. Right now when start our worker it call external api and this call can take different amount of time on each call. We use <a href="https://hexdocs.pm/mox/Mox.html">Mox library</a> to always return the same data and to not wait for response. Next we have to start worker wait for 150ms and check if we have any tickers in db.</p>
-                    <pre>
+          <p>
+            To test our
+            <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> we
+            have to make it predictable. Right now when start our worker it call
+            external api and this call can take different amount of time on each
+            call. We use
+            <a href="https://hexdocs.pm/mox/Mox.html">Mox library</a> to always
+            return the same data and to not wait for response. Next we have to
+            start worker wait for 150ms and check if we have any tickers in db.
+          </p>
+          <pre>
                         <code>
 defmodule Ebisu.Bitbay.Worker.TickerTest do
   use Ebisu.DataCase
@@ -256,8 +344,18 @@ defmodule Ebisu.Bitbay.Worker.TickerTest do
 end
                         </code>
                 </pre>
-                <p>Our web application consist of <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> page which gets tickers at initial load and then passes tickers received from <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> to web page. On client side js hook is invoked on new data and graph is updated.</p>
-                <pre>
+          <p>
+            Our web application consist of
+            <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html"
+              >LiveView</a
+            >
+            page which gets tickers at initial load and then passes tickers
+            received from
+            <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> to
+            web page. On client side js hook is invoked on new data and graph is
+            updated.
+          </p>
+          <pre>
                     <code>
 defmodule EbisuWeb.TickerLive do
   use EbisuWeb, :live_view
@@ -324,14 +422,24 @@ defmodule EbisuWeb.TickerLive do
   end
 end
                 </code></pre>
-                <p>To display exchange information we are going to use <a href="https://www.chartjs.org">chart.js</a> library. Our view consist of canvas definition where we store initial array of tickers. </p>
-                <pre><code>
+          <p>
+            To display exchange information we are going to use
+            <a href="https://www.chartjs.org">chart.js</a> library. Our view
+            consist of canvas definition where we store initial array of
+            tickers.
+          </p>
+          <pre><code>
 &#x3C;script src=&#x22;https://cdn.jsdelivr.net/npm/chart.js@2.8.0&#x22;&#x3E;&#x3C;/script&#x3E;
 
 &lt;canvas id=&quot;chart&quot; phx-update=&quot;ignore&quot; phx-hook=&quot;Chart&quot; data-tickers=&quot;&lt;%= Poison.encode!(@tickers) %&gt;&quot;&gt;&lt;/canvas&gt;
-            </pre></code>
-            <p>We define our hook in app.js file. In mounted function we specify how chart should look like. We also define handleEven which is used to update chart with new tickers. This function is called everytime we recive new data from exchange.</p>
-            <pre><code>
+                </code></pre>
+          <p>
+            We define our hook in app.js file. In mounted function we specify
+            how chart should look like. We also define handleEven which is used
+            to update chart with new tickers. This function is called everytime
+            we recive new data from exchange.
+          </p>
+          <pre><code>
 let Hooks = {};
 Hooks.Chart = {
     tickers() { return JSON.parse(this.el.dataset.tickers) },
@@ -361,9 +469,14 @@ Hooks.Chart = {
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {hooks: Hooks, params: {_csrf_token: csrfToken}})
             </code></pre>
-            <p>You can view full code at: <a href="https://github.com/elpikel/ebisu">https://github.com/elpikel/ebisu</a>
-                </div>
-            </div>
+          <p>
+            You can view full code at:
+            <a href="https://github.com/elpikel/ebisu"
+              >https://github.com/elpikel/ebisu</a
+            >
+          </p>
         </div>
-    </body>
+      </div>
+    </div>
+  </body>
 </html>
