@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>cmdarek.com - Paginate with Ecto</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="Description" lang="en" content="Paginate with Ecto" />
+    <meta name="keywords" content="Elixir, Ecto, Paginate, Postgres" />
+    <meta
+      name="author"
+      content="Arkadiusz Plichta https://github.com/elpikel"
+    />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link rel="stylesheet" href="../styles/hybrid.css" />
+    <link rel="apple-touch-icon" href="../images/logo.svg" />
+    <link rel="shortcut icon" href="../images/logo.svg" />
+    <link rel="icon" href="images/logo.svg" />
+    <link rel="stylesheet" href="../styles/general.css" />
+
+    <script src="../js/highlight.pack.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <a href="../index.html">
+          <img src="../images/logo.svg" alt="logo" />
+          <h1>cmdarek</h1>
+        </a>
+        <div>
+          <a
+            target="_blank"
+            href="https://twitter.com/el_pikel"
+            class="fa fa-twitter"
+          ></a>
+          <a
+            target="_blank"
+            href="https://github.com/elpikel"
+            class="fa fa-github"
+          ></a>
+        </div>
+      </div>
+      <div class="content">
+        <div class="main">
+          <span>10-02-2022</span>
+          <h2>Paginate with Ecto</h2>
+
+          <p>
+          The easiest way to paginate data is to use LIMIT-OFFSET method. Although it can be what you want it has few problems:
+          </p>
+          <ul>
+              <li>It is rather slow because to skip results it still has to be fetched from db.</li>
+              <li>It can give inconsitent results when new data is inserted while paginating.</li>
+          </ul>
+          <p>
+          Alternative approach is keyset pagination where values from last pagination is remembered between calls for next page.
+          In Elixir ecosystem we already have great library that supports it: <a href="https://github.com/duffelhq/paginator">paginator</a>.
+          Most of the time it is the best choice but sometimes we cannot include external library in 
+          our solution or we need something more tailored to our needs. 
+          </p>
+
+          <p>
+            Our paginator will consist of following modules:
+          </p>
+
+          <ul>
+              <li>ExPaginator - main entry to our library - it exposes paginate function</li>
+              <li>Options - struct that holds parameters for pagination</li>
+              <li>ForwardQuery, BackwardQuery - generates pagination query</li>
+          </ul>
+
+          <pre>
+                    <code>
+defmodule ExPaginator do
+  defstruct entries: [], total: 0, cursor: ""
+  import Ecto.Query
+
+  alias ExPaginator.BackwardQuery
+  alias ExPaginator.ForwardQuery
+  alias ExPaginator.Options
+  alias ExPaginator.Repo
+
+  def paginate(query, %Options{} = opts) do
+    entries =
+      query
+      |> by_cursor(Options.decode(opts.cursor), opts.direction)
+      |> limit(^opts.limit)
+      |> Repo.all()
+
+    total = Repo.aggregate(query, :count)
+
+    cursor =
+      entries
+      |> last_entry()
+      |> cursor(opts.fields, opts.cursor_function)
+
+    %ExPaginator{
+      total: total,
+      entries: entries,
+      cursor: cursor
+    }
+  end
+
+  defp cursor(_fields, _cursor_function, []), do: ""
+
+  defp cursor(last_entry, fields, cursor_function) do
+    fields
+    |> Enum.reduce(%{}, fn
+      {{table, column}, order}, acc ->
+        Map.put(acc, column, %{table: table, value: cursor_function.(last_entry), order: order})
+
+      {column, order}, acc ->
+        Map.put(acc, column, %{table: nil, value: Map.get(last_entry, column), order: order})
+    end)
+    |> Options.encode()
+  end
+
+  defp last_entry(entries) do
+    Enum.at(entries, Enum.count(entries) - 1)
+  end
+
+  defp by_cursor(query, nil, _direction), do: query
+
+  defp by_cursor(query, cursor, direction) do
+    cursor
+    |> Map.keys()
+    |> Enum.reduce(query, fn column, query ->
+      %{table: table, value: value, order: order} = Map.get(cursor, column)
+
+      case direction do
+        :forward ->
+          ForwardQuery.where(query, order, table, column, value)
+
+        _ ->
+          BackwardQuery.where(query, order, table, column, value)
+      end
+    end)
+  end
+end
+                    </code>
+          </pre>
+
+          <p>
+            ExPaginator based on given options does 3 things:
+          </p>
+
+          <ul>
+              <li>query for new page of entries</li>
+              <li>calculate new cursor based on last entry from new page</li>
+              <li>calculate total values</li>
+          </ul>
+          <p>  
+          In case when we want to use pagination keys from associated tables we have to use cursor_function option.
+          To paginate forward/backward we can use direction option.
+          </p>
+
+          <p>
+    In following test you can see how to paginate on associated table.
+          <pre>
+            <code>
+defmodule ExPaginatorTest do
+  use ExPaginator.RepoCase
+
+  alias ExPaginator.Models
+  alias ExPaginator.Options
+  
+  test "paginate on association" do
+    for i <- 1..5 do
+      Repo.insert(%Models.Post{
+        user: %Models.User{name: "user_#{i}"},
+        title: "title_#{i}",
+        body: "body_#{i}"
+      })
+    end
+
+    query =
+      Models.Post
+      |> join(:left, [p], u in assoc(p, :user), as: :user)
+      |> preload(:user)
+      |> order_by([user: u], asc: u.name)
+      |> select([u], u)
+
+    paginator =
+      ExPaginator.paginate(
+        query,
+        %Options{
+          fields: [{{:user, :name}, :asc}],
+          limit: 2,
+          direction: :forward,
+          cursor_function: fn post -> post.user.name end
+        }
+      )
+
+    assert paginator.total == 5
+
+    assert paginator.cursor ==
+      Options.encode(%{name: %{table: :user, value: "user_2", order: :asc}})
+
+    assert [%{user: %{name: "user_1"}}, %{user: %{name: "user_2"}}] = paginator.entries
+
+    paginator =
+      ExPaginator.paginate(
+        query,
+        %Options{
+          fields: [{{:user, :name}, :asc}],
+          limit: 2,
+          cursor: paginator.cursor,
+          cursor_function: fn post -> post.user.name end
+        }
+      )
+
+    assert paginator.total == 5
+
+    assert paginator.cursor ==
+             Options.encode(%{name: %{table: :user, value: "user_4", order: :asc}})
+
+    assert [%{user: %{name: "user_3"}}, %{user: %{name: "user_4"}}] = paginator.entries
+  end
+end
+            </code>
+          </pre>
+
+          <p>
+            You can define fields that you want to use in pagination as list of tuples [{:column_name, :order_dir}]. In case when you want to paginate on associated table you have to specify it in fields as described in test. In that case you also have to provide cursor_function which is used to get value from last entry of paginated result.
+          </p>
+          <p>
+          You can view full code at: <a href="https://github.com/elpikel/ex_paginator">https://github.com/elpikel/ex_paginator</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
