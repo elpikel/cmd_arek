@@ -159,17 +159,19 @@ end
           </p>
 
           <ul>
-              <li>query for new page of entries</li>
+              <li>query for new page of entries - we use previous cursor to do that</li>
               <li>calculate new cursor based on last entry from new page</li>
               <li>calculate total values</li>
           </ul>
           <p>  
           In case when we want to use pagination keys from associated tables we have to use cursor_function option.
-          To paginate forward/backward we can use direction option.
+          To paginate forward/backward we can use direction option. To get first page of data we do not need cursor.
+          To obtain next/previous pages we have to pass cursor which is map of last values from previous page of columns
+          used in pagination.
           </p>
 
           <p>
-    In following test you can see how to paginate on associated table.
+          In following test you can see how to paginate on associated table.
           <pre>
             <code>
 defmodule ExPaginatorTest do
