@@ -303,3 +303,10 @@ li a, a:hover, a:focus, a:active {
     margin-left: auto;
     margin-right: auto;
 }
+
+.snippet {
+    font: "Helvetica Neue", Helvetica, Arial, Geneva, sans-serif;
+    color: #4a514c;
+    padding: 0.2em;
+    background: #f6f6f6;
+}

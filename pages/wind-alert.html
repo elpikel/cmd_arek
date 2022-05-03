@@ -62,15 +62,15 @@
                     <p>
                     Last year I started learning kite surfing.
                     In the area where I live we have rather fussy weather. 
-                    Which means that wind does not not blow with proper speed and direction to fully enjoy this sport. 
-                    To not miss any day that I can practise I prepared small application which fetches wind forecasts from <a href="https://api.open-meteo.com/">open meteo</a> and sends me email notification daily.
+                    Which means that wind does not not blow with proper speed and direction to fully enjoy this sport every day. 
+                    To not miss any day that I can practise I prepared small application which fetches wind forecasts from <a href="https://api.open-meteo.com/">open meteo</a> and sends email notification daily.
                     </p>
                     <p>
                     <img src="../images/orkan_general.svg" class="center img-responsive" />
                     </p>
                     <p>
                     Main entry point to application is web form where user can register for wind forecast for place that interests him. 
-                    This is handled by SubscriptionsController which uses Requests.Subscription to to validate user input and only if it is valid it calls Subscriptions module to register user and subscribe to forecast for a given place.
+                    This is handled by <span class="snippet">SubscriptionsController</span> which uses <span class="snippet">Requests.Subscription</span> to to validate user input and only if it is valid it calls <span class="snippet">Subscriptions</span> module to register user and subscribe to forecast for a given place.
                     </p>
                     <p>
                     <pre>
@@ -177,18 +177,17 @@ config :orkan, Orkan.Scheduler,
                         </code>
                     </pre>
                     <p>
-                    As you can see Weather worker is scheduled to do the work every hour. It fetches data from <a href="https://api.open-meteo.com/">open meteo</a> and saves it to db. That way we are building our history of weather forecast which we could use in the future.
+                    As you can see <span class="snippet">Weather</span> worker is scheduled to do the work every hour. It fetches data from <a href="https://api.open-meteo.com/">open meteo</a> and saves it to db. That way we are building our history of weather forecast which we could use in the future.
                     </p>
                     <p>
-                    Notification worker is scheduled to send email notification to all subscribed users every day at 7 in the morning. It gets forecast for each places from db and uses Bambo library to generate and send email to all users subscribed for notifications for given place.
+                    <span class="snippet">Notification</span> worker is scheduled to send email notification to all subscribed users every day at 7 in the morning. It gets forecast for each places from db and uses <a href="https://hexdocs.pm/bamboo/readme.html">Bambo</a> library to generate and send email to all users subscribed for notifications for given place.
                     </p>
 
-                        <h3>Main Modules</h3>
-                        <h4>Notifications</h4>
-                        <p>
-                        This module is responsible for sending emails about wheather conditions. It uses Subscription module to get subscribesr and palces and Mail module to compose and send email.
-                        </p>
-                        <pre>
+                    <h4>Notifications</h4>
+                    <p>
+                    This module is responsible for sending emails about wheather conditions. It uses <span class="snippet">Subscription</span> module to get subscriptions and palces and <span class="snippet">Mail</span> module to compose and send email. In production environment you should get and send data in <a href="https://mkaszubowski.com/2021/02/16/ecto-repo-stream-data-processing.html">chunks</a>.
+                    </p>
+                    <pre>
                         <code class="elixir">
 defmodule Orkan.Notifications do
   alias Orkan.Subscriptions
@@ -205,11 +204,11 @@ defmodule Orkan.Notifications do
   end
 end
                         </code>
-                        </pre>
+                    </pre>
 
                     <p>
                     <h4>Subscriptions</h4>
-                    This module is responsible for creating subscriptions and exposes information about places and users. What is interesting in this code is that we use on_conflict and conflict_target properties when we insert user and place. Reason for that is concurrent request for the same place by different users or for different places for the same user.
+                    This module is responsible for creating subscriptions and exposes information about places and users. What is interesting in this code is that we use <span class="snippet">on_conflict</span> and <span class="snippet">conflict_target</span> properties when we insert user and place. Reason for that is concurrent request for the same place by different users or for different places for the same user.
                     <pre>
                     <code class="elixir">
 defmodule Orkan.Subscriptions do
@@ -292,7 +291,7 @@ end
 
                     <h4>Forecasts</h4>
                     <p>
-                    Main responsibility of this module is to update forecasts for given places. In order to to that we get data from <a href="https://api.open-meteo.com/">open meteo</a> and save it to db. Additionally this module get forcasts for given places.
+                    Main responsibility of this module is to populate forecast data. In order to to that we get data from <a href="https://api.open-meteo.com/">open meteo</a> and save it to db. Additionally this module exposes forecasts for a given place.
                     </p>
                     <pre>
                     <code class="elixir">
