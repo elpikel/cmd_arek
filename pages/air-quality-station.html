@@ -81,7 +81,7 @@
                     <p>
                     We are going to use <a href="https://www.nerves-project.org/">Nerves</a> to manage Air Quality sensor. On the site you can read the most up to date information on how to create new project and deploy new code to device (in my case it is old raspberry pi).
                     We have two main components:<br/><br/>
-                    <span class="snippet">UdpClient</span> - receives ping message from server and responds with data from Air Quality GenServer.</li>
+                    <span class="snippet">UdpClient</span> - receives <span class="snippet">ping</span> message from server and responds with data from Air Quality <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a>. Each message is json encoded map that consist <span class="snippet">device_id</span> which should be unique and probe which is lates air quality sensor measurement. Message is send back on the same addres and port on which we received <span class="snippet">ping</span> message.</li>
                     <pre>
                     <code class="elixir">
 defmodule Hermus.UdpClient do
@@ -113,7 +113,7 @@ end
                     </code>
                     </pre>
 
-                    <span class="snippet">AirQuality</span> - GenServer which stores last measurement from air quality sensor.
+                    <span class="snippet">AirQuality</span> - <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> which stores last measurement from Air Quality Sensor. It uses <a href="https://github.com/elixir-circuits/circuits_uart">Circuits.UART</a> library to get information from the sensor. Each measurements comes in message that we have to handle using <span class="snippet">handle_info</span> function. To decode binary data we use <span class="snippet">SDS011</span> helper module.
                     <pre>
                     <code class="elixir">
 defmodule Hermus.AirQuality do
@@ -234,7 +234,7 @@ end
                     </code>
                     </pre>
 
-                    For each device we create dynamically GenServer that handles incoming message. We use <span class="snippet">DevicesRegistry</span> to check if GenServer for given device was already created. If current message is first for given device then we create new GenServer. Otherwise we add measurement(probe) via <span class="snippet">Device</span> which saves data to db and broadcasts data to LiveView via <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html">Phoenix.PubSub</a>. The reason for having separate GenServer for each device is to reduce bottleneck that we have in <span class="snippet">UdpServer</span>. In current approach <span class="snippet">UdpServer</span> acts as message broker which routes data to specific GenServer.
+                    For each device we create dynamically <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> that handles incoming message. We use <span class="snippet">DevicesRegistry</span> to check if <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> for given device was already created. If current message is first for given device then we create new <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a>. Otherwise we add measurement(probe) via <span class="snippet">Device</span> which saves data to db and broadcasts data to <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> via <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html">Phoenix.PubSub</a>. The reason for having separate <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> for each device is to reduce bottleneck that we have in <span class="snippet">UdpServer</span>. In current approach <span class="snippet">UdpServer</span> acts as message broker which routes data to specific <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a>.
 
                     <pre>
                     <code class="elixir">
@@ -283,7 +283,7 @@ end
                     </code>
                     </pre>
  
-                    When we mount LivewView we get last 20 measurements and display them using <a href="https://www.chartjs.org/">chart js.</a>. We also subscribe to <span class="snippet">probe</span> topic on which we receive real time measurements from devices. On new message we update assigns which are picked up by js hook which updates graph with latest measurements.
+                    When we mount <a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html">LiveView</a> we get latest measurements and display them using <a href="https://www.chartjs.org/">chart js.</a>. We also subscribe to <span class="snippet">probe</span> topic on which we receive real time measurements from devices. On new message we update assigns which are picked up by js hook which updates graph with latest measurements.
 
                     <pre>
                     <code class="elixir">
