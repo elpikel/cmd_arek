@@ -174,7 +174,8 @@ end
                         <li>Display data on live view dashboard.</li>
                     </ul>
 
-                    <span class="snippet">UdpServer</span> - broadcasts ping message on given subnet and port every second. It also handles incoming message from devices.
+                    <span class="snippet">UdpServer</span> - broadcasts ping message on given subnet and port every second. For each ping message, every device responds with latest measurement.
+
                     <pre>
                     <code class="elixir">
 defmodule Hermus.UdpServer do
@@ -233,7 +234,7 @@ end
                     </code>
                     </pre>
 
-                    For each device we create dynamically GenServer that handles incoming message. We use <span class="snippet">DevicesRegistry</span> to check if GenServer for given device was already created. If current message is first for given device then we create new GenServer. Otherwise we add measurement(probe) via <span class="snippet">Device</span> which saves data to db and broadcasts data to LiveView via <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html">Phoenix.PubSub</a>.
+                    For each device we create dynamically GenServer that handles incoming message. We use <span class="snippet">DevicesRegistry</span> to check if GenServer for given device was already created. If current message is first for given device then we create new GenServer. Otherwise we add measurement(probe) via <span class="snippet">Device</span> which saves data to db and broadcasts data to LiveView via <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html">Phoenix.PubSub</a>. The reason for having separate GenServer for each device is to reduce bottleneck that we have in <span class="snippet">UdpServer</span>. In current approach <span class="snippet">UdpServer</span> acts as message broker which routes data to specific GenServer.
 
                     <pre>
                     <code class="elixir">
@@ -282,7 +283,7 @@ end
                     </code>
                     </pre>
  
-                    When we mount LivewView we get last 20 measurements and display them using <a href="https://www.chartjs.org/">chart js.</a>. We also subscribe to <span class="snippet">probe</span> topic on which we receive real time measurements from devices. On new message we update assigns which are picked up by js hook which updates chart.js graph.
+                    When we mount LivewView we get last 20 measurements and display them using <a href="https://www.chartjs.org/">chart js.</a>. We also subscribe to <span class="snippet">probe</span> topic on which we receive real time measurements from devices. On new message we update assigns which are picked up by js hook which updates graph with latest measurements.
 
                     <pre>
                     <code class="elixir">
