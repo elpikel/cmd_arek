@@ -56,14 +56,32 @@
                     <span>05-08-2022</span>
                     <h2>Air quality station</h2>
                     <p>
-                    Brief description of what and why we want to build.
-                    <img src="../images/air-quality-station.jpg" class="center img-responsive" />
+                    Air quality in <a href="https://en.wikipedia.org/wiki/Poland">country</a> where i live is one of the worst in <a href="https://ec.europa.eu/eurostat/web/products-eurostat-news/-/edn-20210603-1">Europe</a>. It is not so bad in <a href="https://en.wikipedia.org/wiki/Gda%C5%84sk">the city</a> where I live but it is good to be aware of if because of effects it has on <a href="https://www.pca.state.mn.us/air/air-quality-and-you-health-effects-air-pollution">human health</a>. There are multiple places where you can check air quality probably the most accessible is one of the weather apps you can install on your phone, but they can be inaccurate because of placement of sensors. If you want to have the most accurate measurement you can buy one of the air quality measurements monitors or you can try to build one. If you want to try to do if yourself here is what you need:
+
+                    <ul>
+                        <li><a href="https://www.amazon.com/SDS011-Quality-Detection-Conditioning-Monitor/dp/B07FSDMRR5">air quality sensor</a></li>
+                        <li>raspberry pi with WiFi module</li>
+                        <li>prior Elixir and Phoenix knowledge</li>
+                    </ul>
+                    
+                    <img src="../images/air-quality-station.jpg" class="center img-responsive-medium" style="padding-top: 1em;" />
+                    <div class="image-description">Rasperry Pi with WiFi module and Air Quality sensor</div>
                     </p>
-                    <p>
                     <h4>Architecture</h4>
+                    <p>
+                    Our solution is going to consist of two parts. Nerves application that is going to get information about air quality and send it to Phoenix application which stores measurements and display them on dashboard.
                     </p>
                     <p>
+                    <img src="../images/hermus_architecture.png" class="center img-responsive" />
+                    </p>
+                    <p>
+                    Communication between device and web app is done through <a href="https://en.wikipedia.org/wiki/User_Datagram_Protocol">UDP</a>. Server broadcasts ping message every second on a given subnet and all devices listening on it can reply. That way we only get information from sensors when we need them and we avoid situation where we can be flooded with messages from devices.
+                    </p>
                     <h4>Device</h4>
+                    <p>
+                    We are going to use <a href="https://www.nerves-project.org/">Nerves</a> to manage Air Quality sensor. On the site you can read the most up to date information on how to create new project and deploy new code to device (in my case it is old raspberry pi).
+                    We have two main components:<br/><br/>
+                    <span class="snippet">UdpClient</span> - receives ping message from server and responds with data from Air Quality GenServer.</li>
                     <pre>
                     <code class="elixir">
 defmodule Hermus.UdpClient do
@@ -95,6 +113,7 @@ end
                     </code>
                     </pre>
 
+                    <span class="snippet">AirQuality</span> - GenServer which stores last measurement from air quality sensor.
                     <pre>
                     <code class="elixir">
 defmodule Hermus.AirQuality do
@@ -146,7 +165,16 @@ end
                     </pre>
                     </p>
                     <p>
-                    <h4>Dashboard</h4>
+                    <h4>Phoenix App</h4>
+                    
+                    This application has two responsibilities:
+
+                    <ul>
+                        <li>Gather measurements from sensors.</li>
+                        <li>Display data on live view dashboard.</li>
+                    </ul>
+
+                    <span class="snippet">UdpServer</span> - broadcasts ping message on given subnet and port every second. It also handles incoming message from devices.
                     <pre>
                     <code class="elixir">
 defmodule Hermus.UdpServer do
@@ -205,50 +233,7 @@ end
                     </code>
                     </pre>
 
-                    <pre>
-                    <code class="elixir">
-defmodule Hermus.DevicesRegistry do
-  @name :devices_registry
-
-  def name do
-    @name
-  end
-
-  def via_tuple(device_identifier) do
-    {:via, Registry, {@name, device_identifier}}
-  end
-
-  def exist?(device_identifier) do
-    Registry.lookup(@name, device_identifier) != []
-  end
-end
-                    </code>
-                    </pre>
-
-                    <pre>
-                    <code class="elixir">
-defmodule Hermus.DevicesSupervisor do
-  use DynamicSupervisor
-  alias Hermus.Device
-
-  def start_link(_arg) do
-    DynamicSupervisor.start_link(__MODULE__, [], name: __MODULE__)
-  end
-
-  def start_child(device_identifier) do
-    child_specification = {Device, device_identifier}
-
-    DynamicSupervisor.start_child(__MODULE__, child_specification)
-  end
-
-  @impl true
-  def init(_arg) do
-    DynamicSupervisor.init(strategy: :one_for_one)
-  end
-end
-                    </code>
-                    </pre>
-
+                    For each device we create dynamically GenServer that handles incoming message. We use <span class="snippet">DevicesRegistry</span> to check if GenServer for given device was already created. If current message is first for given device then we create new GenServer. Otherwise we add measurement(probe) via <span class="snippet">Device</span> which saves data to db and broadcasts data to LiveView via <a href="https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html">Phoenix.PubSub</a>.
 
                     <pre>
                     <code class="elixir">
@@ -297,6 +282,8 @@ end
                     </code>
                     </pre>
  
+                    When we mount LivewView we get last 20 measurements and display them using <a href="https://www.chartjs.org/">chart js.</a>. We also subscribe to <span class="snippet">probe</span> topic on which we receive real time measurements from devices. On new message we update assigns which are picked up by js hook which updates chart.js graph.
+
                     <pre>
                     <code class="elixir">
 defmodule HermusWeb.ProbeLive.Index do
