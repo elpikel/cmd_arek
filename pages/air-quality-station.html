@@ -113,7 +113,7 @@ end
                     </code>
                     </pre>
 
-                    <span class="snippet">AirQuality</span> - <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> which stores last measurement from Air Quality Sensor. It uses <a href="https://github.com/elixir-circuits/circuits_uart">Circuits.UART</a> library to get information from the sensor. Each measurements comes in message that we have to handle using <span class="snippet">handle_info</span> function. To decode binary data we use <span class="snippet">SDS011</span> helper module. This module decodes binary data and return <span class="snippet">probe</span> structure which consists of pm25 and pm10 measurements. You can read more about it <a href="https://ww2.arb.ca.gov/resources/inhalable-particulate-matter-and-health">here</a>.
+                    <span class="snippet">AirQuality</span> - <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> which stores last measurement from Air Quality Sensor. It uses <a href="https://github.com/elixir-circuits/circuits_uart">Circuits.UART</a> library to get information from the sensor. Each measurements comes in message that we have to handle using <span class="snippet">handle_info</span> function. To decode binary data we use <span class="snippet">SDS011</span> helper module - which is taken from: <a href="https://github.com/aerosol/exodust">exodust</a>. This module decodes binary data and return <span class="snippet">probe</span> structure which consists of pm25 and pm10 measurements. You can read more about it <a href="https://ww2.arb.ca.gov/resources/inhalable-particulate-matter-and-health">here</a>.
                     <pre>
                     <code class="elixir">
 defmodule Hermus.AirQuality do
