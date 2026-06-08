@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>cmdarek.com - How Internal Links to Search Pages Killed My Google Traffic</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="Description"
+      lang="en"
+      content="How Internal Links to Search Pages Killed My Google Traffic — A Case Study"
+    />
+    <meta
+      name="keywords"
+      content="SEO, Google, internal links, search pages, thin content, crawl budget, nofollow, noindex, robots.txt"
+    />
+    <meta
+      name="author"
+      content="Arkadiusz Plichta https://github.com/elpikel"
+    />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bungee+Outline&family=Roboto+Mono:wght@500&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link rel="stylesheet" href="../styles/hybrid.css" />
+    <link rel="apple-touch-icon" href="../images/logo.svg" />
+    <link rel="shortcut icon" href="../images/logo.svg" />
+    <link rel="icon" href="images/logo.svg" />
+    <link rel="stylesheet" href="../styles/general.css" />
+
+    <script src="../js/highlight.pack.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <a href="../index.html">
+          <img src="../images/logo.svg" alt="logo" />
+          <h1>cmdarek</h1>
+        </a>
+        <div>
+          <a
+            target="_blank"
+            href="https://twitter.com/el_pikel"
+            class="fa fa-twitter"
+          ></a>
+          <a
+            target="_blank"
+            href="https://github.com/elpikel"
+            class="fa fa-github"
+          ></a>
+        </div>
+      </div>
+      <div class="content">
+        <div class="main">
+          <span>08-06-2026</span>
+          <h2>How Internal Links to Search Pages Killed My Google Traffic — A Case Study</h2>
+
+          <h3>TL;DR</h3>
+
+          <p>
+            I made metadata clickable on 25,000 pages, linking to my search
+            engine with query parameters (<code>/search?q=...</code>). Google
+            crawled tens of thousands of these URLs, classified them as thin
+            content, and within a week my organic traffic dropped to near zero.
+          </p>
+
+          <h3>Context</h3>
+
+          <p>
+            I'm building a legal database with ~25,000 detail pages, each
+            containing structured metadata (issuing authority, chairman,
+            contracting authority, city, thematic issues). To improve UX and
+            internal linking, I made every metadata field clickable — each one
+            linked to the search page with the appropriate query:
+          </p>
+
+          <pre><code class="html">&lt;!-- Chairman --&gt;
+&lt;a href="/search?q=John+Smith"&gt;John Smith&lt;/a&gt;
+
+&lt;!-- Contracting authority --&gt;
+&lt;a href="/search?q=City+of+Warsaw"&gt;City of Warsaw&lt;/a&gt;
+
+&lt;!-- City --&gt;
+&lt;a href="/search?q=Warsaw"&gt;Warsaw&lt;/a&gt;
+
+&lt;!-- Date --&gt;
+&lt;a href="/search?date_from=2022-05-31&amp;date_to=2022-05-31"&gt;31.05.2022&lt;/a&gt;
+
+&lt;!-- Issuing authority --&gt;
+&lt;a href="/search?issuing_authority=National+Appeals+Chamber"&gt;National Appeals Chamber&lt;/a&gt;</code></pre>
+
+          <p>
+            In theory — great idea. Internal linking is an SEO pillar, and
+            clickable metadata improves UX. User clicks "John Smith" and sees
+            all rulings by that chairman.
+          </p>
+
+          <h3>What Went Wrong</h3>
+
+          <p>
+            25,000 pages &times; ~6 search links each = <strong>~150,000 unique
+            URLs</strong> like <code>/search?q=...</code>.
+          </p>
+
+          <p>
+            Google discovered these links, started crawling them, and found the
+            same thing on each: a search form + a handful of results. Minimal
+            unique content. Textbook <strong>thin content</strong>.
+          </p>
+
+          <p>Within 2-3 weeks, Google Search Console showed:</p>
+
+          <ul>
+            <li>
+              <strong>7,767 pages</strong> with status "Crawled — currently not
+              indexed"
+            </li>
+            <li>
+              <strong>1,147 pages</strong> with status "Alternate page with
+              proper canonical tag"
+            </li>
+            <li>
+              Organic traffic: <strong>from ~40 clicks/day to zero</strong>
+            </li>
+          </ul>
+
+          <p>
+            Google didn't issue a manual penalty. It simply decided that a
+            domain with thousands of thin content pages doesn't deserve high
+            rankings. The quality score of the entire domain tanked.
+          </p>
+
+          <h3>Why Canonical Didn't Save Me</h3>
+
+          <p>
+            I had canonical set to <code>/search</code> (no params) for
+            date-filtered URLs. But:
+          </p>
+
+          <ol>
+            <li>
+              Canonical is a <strong>hint</strong>, not a directive — Google can
+              ignore it
+            </li>
+            <li>
+              For <code>?q=...</code> URLs, the canonical pointed to itself (I
+              treated each query as a separate "page")
+            </li>
+            <li>
+              Even when Google respects the canonical, it still
+              <strong>crawls</strong> these pages, wasting crawl budget and
+              evaluating their quality
+            </li>
+          </ol>
+
+          <h3>The Fix — Three Layers of Protection</h3>
+
+          <h4>1. robots.txt — Block Crawling</h4>
+
+          <pre><code>Disallow: /search?</code></pre>
+
+          <p>
+            One line. Blocks ALL variants of <code>/search</code> with
+            parameters. Clean <code>/search</code> (no <code>?</code>) remains
+            accessible and indexable.
+          </p>
+
+          <h4>2. rel="nofollow" — Cut Off the Source</h4>
+
+          <pre><code class="html">&lt;!-- BEFORE --&gt;
+&lt;a href="/search?q=John+Smith"&gt;John Smith&lt;/a&gt;
+
+&lt;!-- AFTER --&gt;
+&lt;a href="/search?q=John+Smith" rel="nofollow"&gt;John Smith&lt;/a&gt;</code></pre>
+
+          <p>
+            Even if Google somehow reaches these URLs, <code>nofollow</code>
+            tells it not to follow the link. Belt and suspenders.
+          </p>
+
+          <h4>3. Dynamic noindex Meta Tag — Last Line of Defense</h4>
+
+          <pre><code class="python"># Clean /search page -> index
+# /search?q=anything -> noindex
+if query or page > 1 or has_active_filters:
+    robots = "noindex, follow"
+else:
+    robots = "index, follow"</code></pre>
+
+          <p>
+            Third layer. If Google somehow gets past robots.txt and nofollow —
+            it sees <code>noindex</code> and won't add the page to the index.
+          </p>
+
+          <h4>Bonus: 301 Redirects for Duplicate Paths</h4>
+
+          <p>
+            I also discovered that detail pages were accessible via both
+            <code>/ruling/kio-1234-25</code> (slug) and
+            <code>/ruling/32263</code> (database ID). Google treated these as
+            duplicates. Fix:
+          </p>
+
+          <pre><code class="python"># If URL uses numeric ID but the record has a slug -> 301 redirect
+if record.slug and record.slug != url_param:
+    return redirect(f"/ruling/{record.slug}", status=301)</code></pre>
+
+          <h3>The Rule</h3>
+
+          <p>
+            <strong>Never create crawlable links to search result pages from
+            templates rendered on a large number of pages.</strong>
+          </p>
+
+          <p>
+            If you have 100 pages — no problem. If you have 25,000 — every
+            parametrized link is a potential separate URL in Googlebot's eyes.
+          </p>
+
+          <p>Checklist before adding internal links:</p>
+
+          <ul>
+            <li>Does the target page have unique, valuable content?</li>
+            <li>
+              How many unique URLs will this generate? (pages &times; links per
+              page)
+            </li>
+            <li>Should the target page be in the index?</li>
+            <li>
+              If not &rarr; <code>rel="nofollow"</code> +
+              <code>noindex</code> + <code>robots.txt</code>
+            </li>
+          </ul>
+
+          <h3>What I Should Have Done Instead</h3>
+
+          <p>
+            The UX goal was valid — users should be able to click metadata and
+            find related records. Here are approaches that don't poison your
+            index:
+          </p>
+
+          <ol>
+            <li>
+              <strong><code>rel="nofollow"</code> from day one</strong> —
+              simplest fix, zero SEO risk, full UX preserved
+            </li>
+            <li>
+              <strong>JavaScript-based navigation</strong> —
+              <code>onclick</code> handler instead of
+              <code>&lt;a href&gt;</code>, invisible to crawlers
+            </li>
+            <li>
+              <strong>Faceted navigation pages with real content</strong> —
+              instead of linking to <code>/search?q=John+Smith</code>, create a
+              proper <code>/chairman/john-smith</code> page with aggregated
+              stats, recent rulings, and unique text. These pages
+              <em>should</em> be indexed.
+            </li>
+          </ol>
+
+          <p>
+            Option 3 is the most work but the best outcome — you get both UX
+            and SEO value.
+          </p>
+
+          <h3>Recovery Timeline</h3>
+
+          <p>
+            I deployed the fix today. According to various sources, recovery
+            from this type of issue takes <strong>2-4 weeks</strong>. I'll
+            update this post when I see results.
+          </p>
+
+          <p><strong>Update (TBD):</strong> <em>Waiting for data...</em></p>
+
+          <hr />
+
+          <p>
+            <em>I'm building
+            <a href="https://przetargowi.pl/">Przetargowi.pl</a> — a search
+            engine for public procurement rulings and tenders in Poland.</em>
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
